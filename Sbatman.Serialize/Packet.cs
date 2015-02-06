@@ -402,12 +402,14 @@ namespace Sbatman.Serialize
                             _PacketObjects.Add(Encoding.UTF8.GetString(data3, 0, data3.Length));
                             bytepos += data3.Length;
                             break;
+                        default:
+                            throw new PacketCorruptException("An internal unpacking error occured, Unknown internal data type present");                            
                     }
                 }
             }
             catch (Exception e)
             {
-             
+                throw new PacketCorruptException("An internal unpacking error occured, Packet possibly Corrupt", e);
             }
         }
 
@@ -416,10 +418,17 @@ namespace Sbatman.Serialize
         /// </summary>
         protected void ExpandDataArray()
         {
-            _ReturnByteArray = null;
-            byte[] newData = new byte[_Data.Length * 2];
-            _Data.CopyTo(newData, 0);
-            _Data = newData;
+            try
+            {
+                _ReturnByteArray = null;
+                byte[] newData = new byte[_Data.Length * 2];
+                _Data.CopyTo(newData, 0);
+                _Data = newData;
+            }
+            catch (OutOfMemoryException e)
+            {
+                throw new OutOfMemoryException("The internal packet data array failed to expand, Too much data allocated", e);
+            }
         }     
 
         /// <summary>
