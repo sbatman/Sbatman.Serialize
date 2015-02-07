@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 #endregion
@@ -19,7 +20,7 @@ namespace Sbatman.Serialize
         private const int INITAL_DATA_SIZE = 128;
 
         /// <summary>
-        ///     This 4 byte sequence is used to improve start of packet regognition, it isnt the sole desciptor of the packet start
+        ///     This 4 byte sequence is used to improve start of packet regognition, it isnt the sole descriptor of the packet start
         ///     as this would possibly cause issues with packets with byte sequences within them that happened to contains this.
         /// </summary>
         public static readonly byte[] PacketStart = { 0, 48, 21, 0 };
@@ -71,7 +72,7 @@ namespace Sbatman.Serialize
         }
 
         /// <summary>
-        ///     Disposes the packet, destroying all internals buffers and caches, fails silently if the packet is already disposed
+        ///     Disposes the packet, destroying all internals, buffers and caches, fails silently if the packet is already disposed
         /// </summary>
         public void Dispose()
         {
@@ -106,11 +107,10 @@ namespace Sbatman.Serialize
             return p;
         }
 
-
         /// <summary>
         ///     Adds a double to the packet
         /// </summary>
-        /// <param name="d">double to add</param>
+        /// <param name="d">The double to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         public void AddDouble(Double d)
         {
@@ -132,7 +132,7 @@ namespace Sbatman.Serialize
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
             _ReturnByteArray = null;
-            UInt32 size = (UInt32) byteArray.Length;
+            UInt32 size = (UInt32)byteArray.Length;
             while (_DataPos + (size + 5) >= _Data.Length) ExpandDataArray();
             _Data[_DataPos++] = (byte)ParamTypes.BYTE_PACKET;
             BitConverter.GetBytes(byteArray.Length).CopyTo(_Data, (int)_DataPos);
@@ -233,10 +233,11 @@ namespace Sbatman.Serialize
             _ReturnByteArray = null;
             while (_DataPos + 3 >= _Data.Length) ExpandDataArray();
             _Data[_DataPos++] = (byte)ParamTypes.INT16;
-            BitConverter.GetBytes(i).CopyTo(_Data,(int) _DataPos);
+            BitConverter.GetBytes(i).CopyTo(_Data, (int)_DataPos);
             _DataPos += 2;
             _ParamCount++;
         }
+
         /// <summary>
         ///     Adds an Int16 to the packet
         /// </summary>
@@ -301,28 +302,10 @@ namespace Sbatman.Serialize
             _ReturnByteArray = new byte[12 + _DataPos];
             PacketStart.CopyTo(_ReturnByteArray, 0);
             BitConverter.GetBytes(_ParamCount).CopyTo(_ReturnByteArray, 4);
-            BitConverter.GetBytes(12 + _DataPos).CopyTo(_ReturnByteArray, 6);
+            BitConverter.GetBytes((UInt32)12 + _DataPos).CopyTo(_ReturnByteArray, 6);
             BitConverter.GetBytes(Type).CopyTo(_ReturnByteArray, 10);
             Array.Copy(_Data, 0, _ReturnByteArray, 12, (int)_DataPos);
             return _ReturnByteArray;
-        }
-
-        /// <summary>
-        ///     Converts a byte array to a packet
-        /// </summary>
-        /// <param name="data">the byte array to convery</param>
-        /// <returns>Returns a packet build from a byte array</returns>
-        public static Packet FromByteArray(byte[] data)
-        {
-            Packet returnPacket = new Packet(BitConverter.ToUInt16(data, 10))
-            {
-                _ParamCount = BitConverter.ToUInt16(data, 4),
-                _Data = new byte[BitConverter.ToInt32(data, 6) - 12]
-            };
-            returnPacket._DataPos = (UInt32)returnPacket._Data.Length;
-            Array.Copy(data, 12, returnPacket._Data, 0, returnPacket._Data.Length);
-            returnPacket.UpdateObjects();
-            return returnPacket;
         }
 
         /// <summary>
@@ -403,7 +386,7 @@ namespace Sbatman.Serialize
                             bytepos += data3.Length;
                             break;
                         default:
-                            throw new PacketCorruptException("An internal unpacking error occured, Unknown internal data type present");                            
+                            throw new PacketCorruptException("An internal unpacking error occured, Unknown internal data type present");
                     }
                 }
             }
@@ -429,7 +412,7 @@ namespace Sbatman.Serialize
             {
                 throw new OutOfMemoryException("The internal packet data array failed to expand, Too much data allocated", e);
             }
-        }     
+        }
 
         /// <summary>
         ///     An enum containing supported types
@@ -448,5 +431,58 @@ namespace Sbatman.Serialize
             BYTE_PACKET,
             UTF8_STRING,
         };
+
+        /// <summary>
+        ///     Converts a byte array to a packet
+        /// </summary>
+        /// <param name="data">the byte array to convery</param>
+        /// <returns>Returns a packet build from a byte array</returns>
+        public static Packet FromByteArray(byte[] data)
+        {
+            Packet returnPacket = new Packet(BitConverter.ToUInt16(data, 10))
+            {
+                _ParamCount = BitConverter.ToUInt16(data, 4),
+                _Data = new byte[BitConverter.ToUInt32(data, 6) - 12]
+            };
+            returnPacket._DataPos = (UInt32)returnPacket._Data.Length;
+            Array.Copy(data, 12, returnPacket._Data, 0, returnPacket._Data.Length);
+            returnPacket.UpdateObjects();
+            return returnPacket;
+        }
+
+        /// <summary>
+        /// Reads a packet from the provided stream
+        /// </summary>
+        /// <param name="data">The stream from which the packet should be sourced</param>
+        /// <returns></returns>
+        public static Packet FromStream(Stream data)
+        {
+            const int PACKET_HEADER_LENGTH = 12;
+            byte[] packetHeader = new byte[PACKET_HEADER_LENGTH];
+            data.Read(packetHeader, 0, PACKET_HEADER_LENGTH);
+
+            if (!TestForPacketHeader(packetHeader)) throw new NotAPacketException();
+
+            UInt32 remainingPacketLength = BitConverter.ToUInt32(packetHeader, 6);
+            byte[] packetData = new byte[PACKET_HEADER_LENGTH + remainingPacketLength];
+            data.Read(packetData, PACKET_HEADER_LENGTH, (Int32)remainingPacketLength);
+            Array.Copy(packetHeader, packetData, PACKET_HEADER_LENGTH);
+
+            return FromByteArray(packetData);
+        }
+
+        /// <summary>
+        /// Returns whether the packet header detected in the array has the correct packet start byte marks
+        /// </summary>
+        /// <param name="data">The array to test</param>
+        /// <returns>True if the array has the correct byte start marks else false</returns>
+        private static bool TestForPacketHeader(byte[] data)
+        {
+            for (int x = 0; x < PacketStart.Length; x++)
+            {
+                if (data[x] != PacketStart[x]) return false;
+            }
+            return true;
+        }
     }
 }
