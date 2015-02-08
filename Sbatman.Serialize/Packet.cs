@@ -270,6 +270,11 @@ namespace Sbatman.Serialize
             _ParamCount++;
         }
 
+        /// <summary>
+        ///     Adds a decimal to the packet
+        /// </summary>
+        /// <param name="u">The decimal to add</param>
+        /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         public void AddDecimal(decimal d)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
