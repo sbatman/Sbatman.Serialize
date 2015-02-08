@@ -17,13 +17,13 @@ namespace Sbatman.Serialize
         /// <summary>
         ///     This is the initial size of the internal byte array size of the packet
         /// </summary>
-        private const int INITAL_DATA_SIZE = 128;
+        private const Int32 INITAL_DATA_SIZE = 128;
 
         /// <summary>
         ///     This 4 byte sequence is used to improve start of packet regognition, it isnt the sole descriptor of the packet start
         ///     as this would possibly cause issues with packets with byte sequences within them that happened to contains this.
         /// </summary>
-        public static readonly byte[] PacketStart = { 0, 48, 21, 0 };
+        public static readonly Byte[] PacketStart = { 0, 48, 21, 0 };
 
         /// <summary>
         ///     The type id of the packet
@@ -33,7 +33,7 @@ namespace Sbatman.Serialize
         /// <summary>
         ///     The internal data array of the packet
         /// </summary>
-        protected byte[] _Data;
+        protected Byte[] _Data;
 
         /// <summary>
         ///     The current position in the internal data array
@@ -275,7 +275,7 @@ namespace Sbatman.Serialize
         /// </summary>
         /// <param name="s">The String to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
-        public void AddString(string s)
+        public void AddString(String s)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
             byte[] byteArray = Encoding.UTF8.GetBytes(s);
@@ -295,7 +295,7 @@ namespace Sbatman.Serialize
         /// </summary>
         /// <returns>A byte array representing the packet</returns>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
-        public byte[] ToByteArray()
+        public Byte[] ToByteArray()
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
             if (_ReturnByteArray != null) return _ReturnByteArray;
@@ -313,7 +313,7 @@ namespace Sbatman.Serialize
         /// </summary>
         /// <returns>An array of the contained objects</returns>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
-        public object[] GetObjects()
+        public Object[] GetObjects()
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
             return _PacketObjects.ToArray();
@@ -437,7 +437,7 @@ namespace Sbatman.Serialize
         /// </summary>
         /// <param name="data">the byte array to convery</param>
         /// <returns>Returns a packet build from a byte array</returns>
-        public static Packet FromByteArray(byte[] data)
+        public static Packet FromByteArray(Byte[] data)
         {
             Packet returnPacket = new Packet(BitConverter.ToUInt16(data, 10))
             {
@@ -476,7 +476,7 @@ namespace Sbatman.Serialize
         /// </summary>
         /// <param name="data">The array to test</param>
         /// <returns>True if the array has the correct byte start marks else false</returns>
-        private static bool TestForPacketHeader(byte[] data)
+        private static bool TestForPacketHeader(Byte[] data)
         {
             for (int x = 0; x < PacketStart.Length; x++)
             {
