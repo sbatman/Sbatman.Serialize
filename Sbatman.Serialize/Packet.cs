@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 #endregion
@@ -321,7 +322,7 @@ namespace Sbatman.Serialize
             _ReturnByteArray = new byte[12 + _DataPos];
             PacketStart.CopyTo(_ReturnByteArray, 0);
             BitConverter.GetBytes(_ParamCount).CopyTo(_ReturnByteArray, 4);
-            BitConverter.GetBytes((UInt32)12 + _DataPos).CopyTo(_ReturnByteArray, 6);
+            BitConverter.GetBytes(12 + _DataPos).CopyTo(_ReturnByteArray, 6);
             BitConverter.GetBytes(Type).CopyTo(_ReturnByteArray, 10);
             Array.Copy(_Data, 0, _ReturnByteArray, 12, (int)_DataPos);
             return _ReturnByteArray;
@@ -524,13 +525,10 @@ namespace Sbatman.Serialize
         /// </summary>
         /// <param name="data">The array to test</param>
         /// <returns>True if the array has the correct byte start marks else false</returns>
-        private static bool TestForPacketHeader(Byte[] data)
+        
+        private static bool TestForPacketHeader(IList<byte> data)
         {
-            for (int x = 0; x < PacketStart.Length; x++)
-            {
-                if (data[x] != PacketStart[x]) return false;
-            }
-            return true;
+            return !PacketStart.Where((t, x) => data[x] != t).Any();
         }
     }
 }
