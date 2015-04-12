@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
@@ -139,6 +140,26 @@ namespace Sbatman.Serialize
             BitConverter.GetBytes(byteArray.Length).CopyTo(_Data, (int)_DataPos);
             _DataPos += 4;
             byteArray.CopyTo(_Data, (int)_DataPos);
+            _DataPos += size;
+            _ParamCount++;
+        }
+
+        /// <summary>
+        ///     Adds a byte array to the packet Compressed
+        /// </summary>
+        /// <param name="byteArray">The bytearray to add</param>
+        /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
+        public void AddBytePacketCompressed(byte[] byteArray)
+        {
+            if (_Disposed) throw new ObjectDisposedException(ToString());
+            byteArray = Compress(byteArray);
+            _ReturnByteArray = null;
+            UInt32 size = (UInt32)byteArray.Length;
+            while (_DataPos + (size + 5) >= _Data.Length) ExpandDataArray();
+            _Data[_DataPos++] = (byte)ParamTypes.COMPRESSED_BYTE_PACKET;
+            BitConverter.GetBytes(byteArray.Length).CopyTo(_Data, (Int32)_DataPos);
+            _DataPos += 4;
+            byteArray.CopyTo(_Data, (Int32)_DataPos);
             _DataPos += size;
             _ParamCount++;
         }
@@ -433,6 +454,14 @@ namespace Sbatman.Serialize
                                 bytepos += 16;
                             }
                             break;
+                        case ParamTypes.COMPRESSED_BYTE_PACKET:
+                            byte[] data2 = new byte[BitConverter.ToInt32(_Data, bytepos)];
+                            bytepos += 4;
+                            Array.Copy(_Data, bytepos, data2, 0, data2.Length);
+                            _PacketObjects.Add(Uncompress(data2));
+                            bytepos += data2.Length;
+                         
+                            break;
                         default:
                             throw new PacketCorruptException("An internal unpacking error occured, Unknown internal data type present");
                     }
@@ -479,6 +508,7 @@ namespace Sbatman.Serialize
             BYTE_PACKET,
             UTF8_STRING,
             DECIMAL,
+            COMPRESSED_BYTE_PACKET,
         };
 
         /// <summary>
@@ -518,6 +548,31 @@ namespace Sbatman.Serialize
             Array.Copy(packetHeader, packetData, PACKET_HEADER_LENGTH);
 
             return FromByteArray(packetData);
+        }
+
+
+        public static byte[] Uncompress(byte[] bytes)
+        {
+            using (DeflateStream ds = new DeflateStream(new MemoryStream(bytes), CompressionMode.Decompress))
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    ds.CopyTo(ms);
+                    return ms.ToArray();
+                }
+            }
+        }
+
+        public static byte[] Compress(byte[] bytes)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (DeflateStream ds = new DeflateStream(ms, CompressionMode.Compress))
+                {
+                    ds.Write(bytes, 0, bytes.Length);
+                }
+                return ms.ToArray();
+            }
         }
 
         /// <summary>
