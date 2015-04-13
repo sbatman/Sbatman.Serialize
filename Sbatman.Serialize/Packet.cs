@@ -507,8 +507,8 @@ namespace Sbatman.Serialize
             BOOL,
             BYTE_PACKET,
             UTF8_STRING,
-            DECIMAL,
             COMPRESSED_BYTE_PACKET,
+            DECIMAL,
         };
 
         /// <summary>
