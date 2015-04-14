@@ -11,5 +11,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Sbatman.com Copyright © 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("0.3.0.2039")]
-[assembly: AssemblyFileVersion("0.3.0.2039")]
+[assembly: AssemblyVersion("0.3.1.1234")]
+[assembly: AssemblyFileVersion("0.3.1.1234")]
