@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>Sbatman.Serialize</id>
+    <authors>Steven Batchelor-Manning</authors>
+    <description>Sbatman.Serialize is a lightweight and easy to use serialization library. This allows rapid serilizsation and deserialzation of packets containing a range of .net types. The library is also Portable class library complient allowing it to work on a range of platforms.</description>
+    <language>en-US</language>
+    <projectUrl>https://github.com/sbatman/Sbatman.Serialize</projectUrl>
+    <licenseUrl>https://github.com/sbatman/Sbatman.Serialize</licenseUrl>
+    <tags>Networking Serialization Compression</tags>
+  </metadata>
+</package>
