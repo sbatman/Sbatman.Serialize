@@ -140,7 +140,7 @@ namespace Sbatman.Serialize
         public void Add(Byte[] byteArray, Boolean compress=false)
         {
             if (compress) byteArray = Compress(byteArray);
-            AddInternal(byteArray, compress ? ParamTypes.COMPRESSED_BYTE_PACKET : ParamTypes.BYTE_PACKET, (UInt16)byteArray.Length,true);
+            AddInternal(byteArray, compress ? ParamTypes.COMPRESSED_BYTE_PACKET : ParamTypes.BYTE_PACKET, (UInt32)byteArray.Length,true);
         }
 
         /// <summary>
@@ -320,12 +320,12 @@ namespace Sbatman.Serialize
             AddToListInternal(list, ParamTypes.DECIMAL, 16);
         }
 
-        private void AddToListInternal<T>(IReadOnlyCollection<T> list, ParamTypes typeMarker, UInt16 elementSize)
+        private void AddToListInternal<T>(IReadOnlyCollection<T> list, ParamTypes typeMarker, UInt32 elementSize)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
             if (list == null || list.Count == 0 || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null, empty and > UInt16.MaxValue element lists cannot be added");
             _ReturnByteArray = null;
-            Int32 byteLength = 3 + (elementSize * list.Count);
+            UInt32 byteLength = 3 + (elementSize * (UInt32)list.Count);
             while (_DataPos + byteLength >= _Data.Length) ExpandDataArray();
             _Data[_DataPos++] = (Byte)(((Byte)typeMarker) | 128);
             BitConverter.GetBytes((UInt16)list.Count).CopyTo(_Data, (Int32)_DataPos);
@@ -338,11 +338,11 @@ namespace Sbatman.Serialize
             _ParamCount++;
         }
 
-        private void AddInternal<T>(T value, ParamTypes typeMarker, UInt16 elementSize, Boolean specifySize = false)
+        private void AddInternal<T>(T value, ParamTypes typeMarker, UInt32 elementSize, Boolean specifySize = false)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
             _ReturnByteArray = null;
-            while (_DataPos + elementSize + 1 >= _Data.Length) ExpandDataArray();
+            while (_DataPos + elementSize + (specifySize?5:1) >= _Data.Length) ExpandDataArray();
             _Data[_DataPos++] = (Byte)(typeMarker);
             if (specifySize)
             {
@@ -350,6 +350,7 @@ namespace Sbatman.Serialize
                 _DataPos += 4;
             }
             _GetBytesMethods[typeof(T)](value, _Data, (Int32)_DataPos);
+            
             _DataPos += elementSize;
             _ParamCount++;
         }
