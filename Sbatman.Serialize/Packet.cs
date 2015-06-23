@@ -7,7 +7,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
-#endregion
+#endregion Usings
 
 namespace Sbatman.Serialize
 {
@@ -62,8 +62,6 @@ namespace Sbatman.Serialize
         /// </summary>
         protected Byte[] _ReturnByteArray;
 
-        
-
         private static readonly Dictionary<Type, Action<Object, Byte[], Int32>> _GetBytesMethods = new Dictionary<Type, Action<Object, Byte[], Int32>>
         {
             {typeof(Double),(obj, data, datpos)=>{ BitConverter.GetBytes((Double)obj).CopyTo(data, datpos); }},
@@ -72,6 +70,8 @@ namespace Sbatman.Serialize
             {typeof(Boolean),(obj, data, datpos)=>{ BitConverter.GetBytes((Boolean)obj).CopyTo(data, datpos); }},
             {typeof(Int64),(obj, data, datpos)=>{ BitConverter.GetBytes((Int64)obj).CopyTo(data, datpos); }},
             {typeof(UInt64),(obj, data, datpos)=>{ BitConverter.GetBytes((UInt64)obj).CopyTo(data, datpos); }},
+            {typeof(TimeSpan),(obj, data, datpos)=>{ BitConverter.GetBytes(((TimeSpan)obj).Ticks).CopyTo(data, datpos); }},
+            {typeof(DateTime),(obj, data, datpos)=>{ BitConverter.GetBytes(((DateTime)obj).Ticks).CopyTo(data, datpos); }},
             {typeof(Int16),(obj, data, datpos)=>{ BitConverter.GetBytes((Int16)obj).CopyTo(data, datpos); }},
             {typeof(UInt16),(obj, data, datpos)=>{ BitConverter.GetBytes((UInt16)obj).CopyTo(data, datpos); }},
             {typeof(UInt32),(obj, data, datpos)=>{ BitConverter.GetBytes((UInt32)obj).CopyTo(data, datpos); }},
@@ -137,10 +137,10 @@ namespace Sbatman.Serialize
         /// <param name="byteArray">The bytearray to add</param>
         /// <param name="compress">Whether or not to compress the bytearray, potentially saving large quantitys of badwidth at increased cpu cost</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
-        public void Add(Byte[] byteArray, Boolean compress=false)
+        public void Add(Byte[] byteArray, Boolean compress = false)
         {
             if (compress) byteArray = Compress(byteArray);
-            AddInternal(byteArray, compress ? ParamTypes.COMPRESSED_BYTE_PACKET : ParamTypes.BYTE_PACKET, (UInt32)byteArray.Length,true);
+            AddInternal(byteArray, compress ? ParamTypes.COMPRESSED_BYTE_PACKET : ParamTypes.BYTE_PACKET, (UInt32)byteArray.Length, true);
         }
 
         /// <summary>
@@ -254,6 +254,37 @@ namespace Sbatman.Serialize
         }
 
         /// <summary>
+        ///     Adds a TimeSpan to the packet
+        /// </summary>
+        /// <param name="s">The TimeSpan to add</param>
+        /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
+        public void Add(TimeSpan s)
+        {
+            AddInternal(s, ParamTypes.TIMESPAN, 8);
+        }
+
+        /// <summary>
+        ///     Adds a DateTime to the packet
+        /// </summary>
+        /// <param name="s">The DateTime to add</param>
+        /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
+        public void Add(DateTime s)
+        {
+            AddInternal(s, ParamTypes.DATETIME, 8);
+        }
+
+        /// <summary>
+        ///     Adds a Packet to the packet
+        /// </summary>
+        /// <param name="p">The Packet to add</param>
+        /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
+        public void Add(Packet p)
+        {
+            byte[] data = p.ToByteArray();
+            AddInternal(p, ParamTypes.PACKET, (UInt32)data.Length, true);
+        }
+
+        /// <summary>
         /// Adds a list of Doubles to the packet
         /// </summary>
         /// <param name="list">The list of doubles to add</param>
@@ -308,7 +339,6 @@ namespace Sbatman.Serialize
             AddToListInternal(list, ParamTypes.INT64, 8);
         }
 
-
         /// <summary>
         /// Adds a list of Decimals to the packet
         /// </summary>
@@ -342,7 +372,7 @@ namespace Sbatman.Serialize
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
             _ReturnByteArray = null;
-            while (_DataPos + elementSize + (specifySize?5:1) >= _Data.Length) ExpandDataArray();
+            while (_DataPos + elementSize + (specifySize ? 5 : 1) >= _Data.Length) ExpandDataArray();
             _Data[_DataPos++] = (Byte)(typeMarker);
             if (specifySize)
             {
@@ -350,7 +380,7 @@ namespace Sbatman.Serialize
                 _DataPos += 4;
             }
             _GetBytesMethods[typeof(T)](value, _Data, (Int32)_DataPos);
-            
+
             _DataPos += elementSize;
             _ParamCount++;
         }
@@ -421,6 +451,7 @@ namespace Sbatman.Serialize
                         _PacketObjects.Add(returnList);
                     }
                     break;
+
                 case ParamTypes.FLOAT:
                     {
                         UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
@@ -434,6 +465,7 @@ namespace Sbatman.Serialize
                         _PacketObjects.Add(returnList);
                     }
                     break;
+
                 case ParamTypes.INT32:
                     {
                         UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
@@ -447,6 +479,7 @@ namespace Sbatman.Serialize
                         _PacketObjects.Add(returnList);
                     }
                     break;
+
                 case ParamTypes.BOOL:
                     {
                         UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
@@ -460,6 +493,7 @@ namespace Sbatman.Serialize
                         _PacketObjects.Add(returnList);
                     }
                     break;
+
                 case ParamTypes.INT64:
                     {
                         UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
@@ -495,6 +529,7 @@ namespace Sbatman.Serialize
                         _PacketObjects.Add(returnList);
                     }
                     break;
+
                 case ParamTypes.UINT64:
                     {
                         UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
@@ -508,6 +543,7 @@ namespace Sbatman.Serialize
                         _PacketObjects.Add(returnList);
                     }
                     break;
+
                 case ParamTypes.INT16:
                     {
                         UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
@@ -540,7 +576,7 @@ namespace Sbatman.Serialize
                             Int32[] bits = new Int32[4];
                             for (Int32 i = 0; i < 4; i++) bits[i] = BitConverter.ToInt32(_Data, bytepos + (i * 4));
                             returnList.Add(new Decimal(bits));
-                           
+
                             bytepos += 16;
                         }
                         _PacketObjects.Add(returnList);
@@ -570,30 +606,35 @@ namespace Sbatman.Serialize
                         bytepos += 8;
                     }
                     break;
+
                 case ParamTypes.FLOAT:
                     {
                         _PacketObjects.Add(BitConverter.ToSingle(_Data, bytepos));
                         bytepos += 4;
                     }
                     break;
+
                 case ParamTypes.INT32:
                     {
                         _PacketObjects.Add(BitConverter.ToInt32(_Data, bytepos));
                         bytepos += 4;
                     }
                     break;
+
                 case ParamTypes.BOOL:
                     {
                         _PacketObjects.Add(BitConverter.ToBoolean(_Data, bytepos));
                         bytepos += 1;
                     }
                     break;
+
                 case ParamTypes.INT64:
                     {
                         _PacketObjects.Add(BitConverter.ToInt64(_Data, bytepos));
                         bytepos += 8;
                     }
                     break;
+
                 case ParamTypes.BYTE_PACKET:
                     {
                         Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytepos)];
@@ -603,24 +644,38 @@ namespace Sbatman.Serialize
                         bytepos += data.Length;
                     }
                     break;
+
+                case ParamTypes.PACKET:
+                    {
+                        Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytepos)];
+                        bytepos += 4;
+                        Array.Copy(_Data, bytepos, data, 0, data.Length);
+                        _PacketObjects.Add(Packet.FromByteArray(data));
+                        bytepos += data.Length;
+                    }
+                    break;
+
                 case ParamTypes.UINT32:
                     {
                         _PacketObjects.Add(BitConverter.ToUInt32(_Data, bytepos));
                         bytepos += 4;
                     }
                     break;
+
                 case ParamTypes.UINT64:
                     {
                         _PacketObjects.Add(BitConverter.ToUInt64(_Data, bytepos));
                         bytepos += 8;
                     }
                     break;
+
                 case ParamTypes.INT16:
                     {
                         _PacketObjects.Add(BitConverter.ToInt16(_Data, bytepos));
                         bytepos += 2;
                     }
                     break;
+
                 case ParamTypes.UTF8_STRING:
                     {
                         Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytepos)];
@@ -630,6 +685,7 @@ namespace Sbatman.Serialize
                         bytepos += data.Length;
                     }
                     break;
+
                 case ParamTypes.DECIMAL:
                     {
                         Int32[] bits = new Int32[4];
@@ -638,14 +694,29 @@ namespace Sbatman.Serialize
                         bytepos += 16;
                     }
                     break;
+
                 case ParamTypes.COMPRESSED_BYTE_PACKET:
                     Byte[] data2 = new Byte[BitConverter.ToInt32(_Data, bytepos)];
                     bytepos += 4;
                     Array.Copy(_Data, bytepos, data2, 0, data2.Length);
                     _PacketObjects.Add(Uncompress(data2));
                     bytepos += data2.Length;
-
                     break;
+
+                case ParamTypes.TIMESPAN:
+                    {
+                        _PacketObjects.Add(new TimeSpan(BitConverter.ToInt64(_Data, bytepos)));
+                        bytepos += 8;
+                    }
+                    break;
+
+                case ParamTypes.DATETIME:
+                    {
+                        _PacketObjects.Add(new DateTime(BitConverter.ToInt64(_Data, bytepos)));
+                        bytepos += 8;
+                    }
+                    break;
+
                 default:
                     throw new PacketCorruptException("An internal unpacking error occured, Unknown internal data type present");
             }
@@ -669,7 +740,7 @@ namespace Sbatman.Serialize
                 throw new OutOfMemoryException("The internal packet data array failed to expand, Too much data allocated", e);
             }
         }
-
+        
         /// <summary>
         ///     An enum containing supported types
         /// </summary>
@@ -689,6 +760,8 @@ namespace Sbatman.Serialize
             COMPRESSED_BYTE_PACKET,
             DECIMAL,
             PACKET,
+            TIMESPAN,
+            DATETIME
         };
 
         /// <summary>
@@ -730,7 +803,6 @@ namespace Sbatman.Serialize
             return FromByteArray(packetData);
         }
 
-
         public static Byte[] Uncompress(Byte[] bytes)
         {
             using (DeflateStream ds = new DeflateStream(new MemoryStream(bytes), CompressionMode.Decompress))
@@ -760,7 +832,6 @@ namespace Sbatman.Serialize
         /// </summary>
         /// <param name="data">The array to test</param>
         /// <returns>True if the array has the correct byte start marks else false</returns>
-
         private static Boolean TestForPacketHeader(IList<Byte> data)
         {
             return !PacketStart.Where((t, x) => data[x] != t).Any();

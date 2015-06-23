@@ -1,7 +1,4 @@
-﻿using System.Resources;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Reflection;
 
 [assembly: AssemblyTitle("Sbatman.Serialize")]
 [assembly: AssemblyDescription("A lightweight .net serialization library")]
@@ -11,5 +8,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Sbatman.com Copyright © 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("0.4.2.1525")]
-[assembly: AssemblyFileVersion("0.4.2.1525")]
+[assembly: AssemblyVersion("0.5.0.0005")]
+[assembly: AssemblyFileVersion("0.5.0.0005")]
