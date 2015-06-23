@@ -8,11 +8,11 @@ namespace Sbatman.Serialize
         {
         }
 
-        public PacketCorruptException(string message) : base(message)
+        public PacketCorruptException(String message) : base(message)
         {
         }
 
-        public PacketCorruptException(string message, Exception innerException) : base(message, innerException)
+        public PacketCorruptException(String message, Exception innerException) : base(message, innerException)
         {
         }
     }

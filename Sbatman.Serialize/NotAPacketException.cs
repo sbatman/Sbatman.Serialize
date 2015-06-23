@@ -8,11 +8,11 @@ namespace Sbatman.Serialize
         {
         }
 
-        public NotAPacketException(string message) : base(message)
+        public NotAPacketException(String message) : base(message)
         {
         }
 
-        public NotAPacketException(string message, Exception innerException) : base(message, innerException)
+        public NotAPacketException(String message, Exception innerException) : base(message, innerException)
         {
         }
     }
