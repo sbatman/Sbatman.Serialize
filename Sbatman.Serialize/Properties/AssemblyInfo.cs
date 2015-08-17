@@ -8,5 +8,5 @@
 [assembly: AssemblyCopyright("Sbatman.com Copyright © 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("0.5.0.0005")]
-[assembly: AssemblyFileVersion("0.5.0.0005")]
+[assembly: AssemblyVersion("0.6.0.1824")]
+[assembly: AssemblyFileVersion("0.6.0.1824")]

@@ -77,6 +77,7 @@ namespace Sbatman.Serialize
             {typeof(UInt32),(obj, data, datpos)=>{ BitConverter.GetBytes((UInt32)obj).CopyTo(data, datpos); }},
             {typeof(String),(obj, data, datpos)=>{ Encoding.UTF8.GetBytes((String)obj).CopyTo(data, datpos ); }},
             {typeof(Byte[]),(obj, data, datpos)=>{ ((Byte[])obj).CopyTo(data, datpos ); }},
+            {typeof(Guid),(obj, data, datpos)=>{ ((Guid)obj).ToByteArray().CopyTo(data, datpos ); }},
             {typeof(Decimal),(obj, data, datpos)=>
             {
                 Int32[] sections = Decimal.GetBits((Decimal)obj);
@@ -244,6 +245,16 @@ namespace Sbatman.Serialize
         }
 
         /// <summary>
+        ///     Adds a Guid to the packet
+        /// </summary>
+        /// <param name="g">The Guid to add</param>
+        /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
+        public void Add(Guid g)
+        {
+            AddInternal(g, ParamTypes.GUID, 16);
+        }
+
+        /// <summary>
         ///     Adds a UTF8 String to the packet
         /// </summary>
         /// <param name="s">The String to add</param>
@@ -290,7 +301,7 @@ namespace Sbatman.Serialize
         /// <param name="list">The list of doubles to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
-        public void AddList(List<Double> list)
+        public void AddList(IReadOnlyCollection<Double> list)
         {
             AddToListInternal(list, ParamTypes.DOUBLE, 8);
         }
@@ -301,7 +312,7 @@ namespace Sbatman.Serialize
         /// <param name="list">The list of doubles to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
-        public void AddList(List<Single> list)
+        public void AddList(IReadOnlyCollection<Single> list)
         {
             AddToListInternal(list, ParamTypes.FLOAT, 4);
         }
@@ -312,7 +323,7 @@ namespace Sbatman.Serialize
         /// <param name="list">The list of doubles to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
-        public void AddList(List<Int32> list)
+        public void AddList(IReadOnlyCollection<Int32> list)
         {
             AddToListInternal(list, ParamTypes.INT32, 4);
         }
@@ -323,7 +334,7 @@ namespace Sbatman.Serialize
         /// <param name="list">The list of doubles to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
-        public void AddList(List<Boolean> list)
+        public void AddList(IReadOnlyCollection<Boolean> list)
         {
             AddToListInternal(list, ParamTypes.BOOL, 1);
         }
@@ -334,7 +345,7 @@ namespace Sbatman.Serialize
         /// <param name="list">The list of doubles to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
-        public void AddList(List<Int64> list)
+        public void AddList(IReadOnlyCollection<Int64> list)
         {
             AddToListInternal(list, ParamTypes.INT64, 8);
         }
@@ -345,7 +356,7 @@ namespace Sbatman.Serialize
         /// <param name="list">The list of doubles to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
-        public void AddList(List<Decimal> list)
+        public void AddList(IReadOnlyCollection<Decimal> list)
         {
             AddToListInternal(list, ParamTypes.DECIMAL, 16);
         }
@@ -507,15 +518,6 @@ namespace Sbatman.Serialize
                         _PacketObjects.Add(returnList);
                     }
                     break;
-                //case ParamTypes.BYTE_PACKET:
-                //    {
-                //        byte[] data = new byte[BitConverter.ToInt32(_Data, bytepos)];
-                //        bytepos += 4;
-                //        Array.Copy(_Data, bytepos, data, 0, data.Length);
-                //        _PacketObjects.Add(data);
-                //        bytepos += data.Length;
-                //    }
-                //    break;
                 case ParamTypes.UINT32:
                     {
                         UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
@@ -557,15 +559,6 @@ namespace Sbatman.Serialize
                         _PacketObjects.Add(returnList);
                     }
                     break;
-                //case ParamTypes.UTF8_STRING:
-                //    {
-                //        byte[] data = new byte[BitConverter.ToInt32(_Data, bytepos)];
-                //        bytepos += 4;
-                //        Array.Copy(_Data, bytepos, data, 0, data.Length);
-                //        _PacketObjects.Add(Encoding.UTF8.GetString(data, 0, data.Length));
-                //        bytepos += data.Length;
-                //    }
-                //    break;
                 case ParamTypes.DECIMAL:
                     {
                         UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
@@ -582,14 +575,6 @@ namespace Sbatman.Serialize
                         _PacketObjects.Add(returnList);
                     }
                     break;
-                //case ParamTypes.COMPRESSED_BYTE_PACKET:
-                //    byte[] data2 = new byte[BitConverter.ToInt32(_Data, bytepos)];
-                //    bytepos += 4;
-                //    Array.Copy(_Data, bytepos, data2, 0, data2.Length);
-                //    _PacketObjects.Add(Uncompress(data2));
-                //    bytepos += data2.Length;
-
-                //    break;
                 default:
                     throw new PacketCorruptException("An internal unpacking error occured, Unknown internal data type present");
             }
@@ -603,35 +588,35 @@ namespace Sbatman.Serialize
                 case ParamTypes.DOUBLE:
                     {
                         _PacketObjects.Add(BitConverter.ToDouble(_Data, bytepos));
-                        bytepos += 8;
+                        bytepos +=sizeof(Double);
                     }
                     break;
 
                 case ParamTypes.FLOAT:
                     {
                         _PacketObjects.Add(BitConverter.ToSingle(_Data, bytepos));
-                        bytepos += 4;
+                        bytepos += sizeof(Single);
                     }
                     break;
 
                 case ParamTypes.INT32:
                     {
                         _PacketObjects.Add(BitConverter.ToInt32(_Data, bytepos));
-                        bytepos += 4;
+                        bytepos += sizeof(Int32);
                     }
                     break;
 
                 case ParamTypes.BOOL:
                     {
                         _PacketObjects.Add(BitConverter.ToBoolean(_Data, bytepos));
-                        bytepos += 1;
+                        bytepos += sizeof(bool);
                     }
                     break;
 
                 case ParamTypes.INT64:
                     {
                         _PacketObjects.Add(BitConverter.ToInt64(_Data, bytepos));
-                        bytepos += 8;
+                        bytepos += sizeof (Int64);
                     }
                     break;
 
@@ -658,7 +643,7 @@ namespace Sbatman.Serialize
                 case ParamTypes.UINT32:
                     {
                         _PacketObjects.Add(BitConverter.ToUInt32(_Data, bytepos));
-                        bytepos += 4;
+                        bytepos += sizeof(UInt32);
                     }
                     break;
 
@@ -717,6 +702,15 @@ namespace Sbatman.Serialize
                     }
                     break;
 
+                case ParamTypes.GUID:
+                    {
+                        byte[] guidArray = new byte[16];
+                        Array.Copy(_Data, bytepos, guidArray, 0, 16);
+                        _PacketObjects.Add(new Guid(guidArray));
+                        bytepos += 16;
+                    }
+                    break;
+
                 default:
                     throw new PacketCorruptException("An internal unpacking error occured, Unknown internal data type present");
             }
@@ -761,7 +755,8 @@ namespace Sbatman.Serialize
             DECIMAL,
             PACKET,
             TIMESPAN,
-            DATETIME
+            DATETIME,
+            GUID
         };
 
         /// <summary>
