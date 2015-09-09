@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
@@ -800,7 +799,7 @@ namespace Sbatman.Serialize
 
         public static Byte[] Uncompress(Byte[] bytes)
         {
-            using (DeflateStream ds = new DeflateStream(new MemoryStream(bytes), CompressionMode.Decompress))
+            using (ICSharpCode.SharpZipLib.GZip.GZipInputStream ds = new ICSharpCode.SharpZipLib.GZip.GZipInputStream(new MemoryStream(bytes)))
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
@@ -814,7 +813,7 @@ namespace Sbatman.Serialize
         {
             using (MemoryStream ms = new MemoryStream())
             {
-                using (DeflateStream ds = new DeflateStream(ms, CompressionMode.Compress))
+                using (ICSharpCode.SharpZipLib.GZip.GZipOutputStream ds = new ICSharpCode.SharpZipLib.GZip.GZipOutputStream(ms))
                 {
                     ds.Write(bytes, 0, bytes.Length);
                 }
