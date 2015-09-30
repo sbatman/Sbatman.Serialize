@@ -587,7 +587,7 @@ namespace Sbatman.Serialize
                 case ParamTypes.DOUBLE:
                     {
                         _PacketObjects.Add(BitConverter.ToDouble(_Data, bytepos));
-                        bytepos +=sizeof(Double);
+                        bytepos += sizeof(Double);
                     }
                     break;
 
@@ -615,7 +615,7 @@ namespace Sbatman.Serialize
                 case ParamTypes.INT64:
                     {
                         _PacketObjects.Add(BitConverter.ToInt64(_Data, bytepos));
-                        bytepos += sizeof (Int64);
+                        bytepos += sizeof(Int64);
                     }
                     break;
 
@@ -733,7 +733,7 @@ namespace Sbatman.Serialize
                 throw new OutOfMemoryException("The internal packet data array failed to expand, Too much data allocated", e);
             }
         }
-        
+
         /// <summary>
         ///     An enum containing supported types
         /// </summary>
@@ -799,7 +799,7 @@ namespace Sbatman.Serialize
 
         public static Byte[] Uncompress(Byte[] bytes)
         {
-            using (ICSharpCode.SharpZipLib.GZip.GZipInputStream ds = new ICSharpCode.SharpZipLib.GZip.GZipInputStream(new MemoryStream(bytes)))
+            using (LZ4PCL.LZ4Stream ds = new LZ4PCL.LZ4Stream(new MemoryStream(bytes), LZ4PCL.CompressionMode.Decompress))
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
@@ -813,7 +813,7 @@ namespace Sbatman.Serialize
         {
             using (MemoryStream ms = new MemoryStream())
             {
-                using (ICSharpCode.SharpZipLib.GZip.GZipOutputStream ds = new ICSharpCode.SharpZipLib.GZip.GZipOutputStream(ms))
+                using (LZ4PCL.LZ4Stream ds = new LZ4PCL.LZ4Stream(ms, LZ4PCL.CompressionMode.Compress))
                 {
                     ds.Write(bytes, 0, bytes.Length);
                 }
