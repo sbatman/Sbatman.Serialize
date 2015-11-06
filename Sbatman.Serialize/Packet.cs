@@ -370,7 +370,7 @@ namespace Sbatman.Serialize
         public void AddList(IReadOnlyCollection<String> list)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
-            if (list == null || list.Count == 0 || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null, empty and > UInt16.MaxValue element lists cannot be added");
+            if (list == null || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null and > UInt16.MaxValue element lists cannot be added");
             _ReturnByteArray = null;
             UInt32 byteLength = 3;
             while (_DataPos + byteLength >= _Data.Length) ExpandDataArray();
@@ -422,7 +422,7 @@ namespace Sbatman.Serialize
         private void AddToListInternal<T>(IReadOnlyCollection<T> list, ParamTypes typeMarker, UInt32 elementSize)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
-            if (list == null || list.Count == 0 || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null, empty and > UInt16.MaxValue element lists cannot be added");
+            if (list == null || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null and > UInt16.MaxValue element lists cannot be added");
             _ReturnByteArray = null;
             UInt32 byteLength = 3 + (elementSize * (UInt32)list.Count);
             while (_DataPos + byteLength >= _Data.Length) ExpandDataArray();
