@@ -885,10 +885,10 @@ namespace Sbatman.Serialize
         }
 
         /// <summary>
-        /// Compresses the prsented byte array using the LZ4 compression library
+        /// Uncompresses the presented byte array using the LZ4 compression library
         /// </summary>
-        /// <param name="bytes">Bytes to compress</param>
-        /// <returns>The compressed byte array</returns>
+        /// <param name="bytes">Bytes to Uncompresses</param>
+        /// <returns>The Uncompresses byte array</returns>
         public static Byte[] Uncompress(Byte[] bytes)
         {
             using (LZ4PCL.LZ4Stream ds = new LZ4PCL.LZ4Stream(new MemoryStream(bytes), LZ4PCL.CompressionMode.Decompress))
@@ -901,6 +901,11 @@ namespace Sbatman.Serialize
             }
         }
 
+        /// <summary>
+        /// Compresses the presented byte array using the LZ4 compression library
+        /// </summary>
+        /// <param name="bytes">Bytes to compress</param>
+        /// <returns>The compressed byte array</returns>
         public static Byte[] Compress(Byte[] bytes)
         {
             using (MemoryStream ms = new MemoryStream())
