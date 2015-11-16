@@ -884,6 +884,11 @@ namespace Sbatman.Serialize
             return FromByteArray(ref packetData);
         }
 
+        /// <summary>
+        /// Compresses the prsented byte array using the LZ4 compression library
+        /// </summary>
+        /// <param name="bytes">Bytes to compress</param>
+        /// <returns>The compressed byte array</returns>
         public static Byte[] Uncompress(Byte[] bytes)
         {
             using (LZ4PCL.LZ4Stream ds = new LZ4PCL.LZ4Stream(new MemoryStream(bytes), LZ4PCL.CompressionMode.Decompress))
