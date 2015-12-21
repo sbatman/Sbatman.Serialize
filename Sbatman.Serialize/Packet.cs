@@ -381,6 +381,42 @@ namespace Sbatman.Serialize
             AddToListInternal(list, ParamTypes.DECIMAL, 16);
         }
 
+        public void AddObject(Object o)
+        {
+            if (o is String) Add((String)o);
+            else if (o is Single) Add((Single)o);
+            else if (o is Int16) Add((Int16)o);
+            else if (o is Int32) Add((Int32)o);
+            else if (o is Int64) Add((Int64)o);
+            else if (o is UInt16) Add((UInt16)o);
+            else if (o is UInt32) Add((UInt32)o);
+            else if (o is UInt64) Add((UInt64)o);
+            else if (o is Double) Add((Double)o);
+            else if (o is Decimal) Add((Decimal)o);
+            else if (o is DateTime) Add((DateTime)o);
+            else if (o is TimeSpan) Add((TimeSpan)o);
+            else if (o is Guid) Add((Guid)o);
+            else if (o is Packet) Add((Packet)o);
+            else if (o is Byte[]) Add((Byte[])o);
+
+         //   else if (o is List<String>) AddList((List<String>)o);
+            else if (o is List<Single>) AddList((List<Single>)o);
+            //  else if (o is List<Int16>) AddList((List<Int16>)o);
+            else if (o is List<Int32>) AddList((List<Int32>)o);
+            else if (o is List<Int64>) AddList((List<Int64>)o);
+            //  else if (o is List<UInt16>) AddList((List<UInt16>)o);
+            //  else if (o is List<UInt32>) AddList((List<UInt32>)o);
+            //  else if (o is List<UInt64>) AddList((List<UInt64>)o);
+            else if (o is List<Double>) AddList((List<Double>)o);
+            else if (o is List<Decimal>) AddList((List<Decimal>)o);
+            //  else if (o is List<DateTime>) AddList((List<DateTime>)o);
+            //  else if (o is List<TimeSpan>) AddList((List<TimeSpan>)o);
+            //  else if (o is List<Guid>) AddList((List<Guid>)o);
+            //   else if (o is List<Packet>) AddList((List<Packet>)o);
+            //  else if (o is List<Byte[]>) AddList((List<Byte[]>)o);
+            else { throw new ArgumentOutOfRangeException("o", "The object type is not currently supported"); }
+        }
+
         private void AddToListInternal<T>(IReadOnlyCollection<T> list, ParamTypes typeMarker, UInt32 elementSize)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
