@@ -373,12 +373,34 @@ namespace Sbatman.Serialize
         /// <summary>
         /// Adds a list of Decimals to the packet
         /// </summary>
-        /// <param name="list">The list of doubles to add</param>
+        /// <param name="list">The list of decimals to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
         public void Add(IReadOnlyCollection<Decimal> list)
         {
             AddToListInternal(list, ParamTypes.DECIMAL, 16);
+        }
+
+        /// <summary>
+        /// Adds a list of Strings to the packet
+        /// </summary>
+        /// <param name="list">The list of Strings to add</param>
+        /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
+        public void AddList(IReadOnlyCollection<String> list)
+        {
+            if (_Disposed) throw new ObjectDisposedException(ToString());
+            if (list == null || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null and > UInt16.MaxValue element lists cannot be added");
+            _ReturnByteArray = null;
+            UInt32 byteLength = 3;
+            while (_DataPos + byteLength >= _Data.Length) ExpandDataArray();
+            _Data[_DataPos++] = (Byte)(((Byte)ParamTypes.UTF8_STRING) | 128);
+            BitConverter.GetBytes((UInt16)list.Count).CopyTo(_Data, (Int32)_DataPos);
+            _DataPos += 2;
+
+            foreach (String f in list) AddInternal(f, ParamTypes.UTF8_STRING, (UInt16)Encoding.UTF8.GetByteCount(f), true, true);
+
+            _ParamCount++;
         }
 
         public void AddObject(Object o)
@@ -399,7 +421,7 @@ namespace Sbatman.Serialize
             else if (o is Packet) Add((Packet)o);
             else if (o is Byte[]) Add((Byte[])o);
 
-         //   else if (o is List<String>) AddList((List<String>)o);
+            else if (o is List<String>) AddList((List<String>)o);
             else if (o is List<Single>) AddList((List<Single>)o);
             //  else if (o is List<Int16>) AddList((List<Int16>)o);
             else if (o is List<Int32>) AddList((List<Int32>)o);
@@ -420,7 +442,7 @@ namespace Sbatman.Serialize
         private void AddToListInternal<T>(IReadOnlyCollection<T> list, ParamTypes typeMarker, UInt32 elementSize)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
-            if (list == null || list.Count == 0 || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException(nameof(list), "Null, empty and > UInt16.MaxValue element lists cannot be added");
+            if (list == null || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null and > UInt16.MaxValue element lists cannot be added");
             _ReturnByteArray = null;
             UInt32 byteLength = 3 + (elementSize * (UInt32)list.Count);
             while (_DataPos + byteLength >= _Data.Length) ExpandDataArray();
@@ -435,7 +457,7 @@ namespace Sbatman.Serialize
             _ParamCount++;
         }
 
-        private void AddInternal<T>(T value, ParamTypes typeMarker, UInt32 elementSize, Boolean specifySize = false)
+        private void AddInternal<T>(T value, ParamTypes typeMarker, UInt32 elementSize, Boolean specifySize = false, Boolean skipParamCount = false)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
             _ReturnByteArray = null;
@@ -449,7 +471,7 @@ namespace Sbatman.Serialize
             GetBytes(typeMarker, value, _Data, (Int32)_DataPos);
 
             _DataPos += elementSize;
-            _ParamCount++;
+            if (!skipParamCount) _ParamCount++;
         }
 
         /// <summary>
@@ -630,6 +652,21 @@ namespace Sbatman.Serialize
                 case ParamTypes.BYTE_PACKET:
                     break;
                 case ParamTypes.UTF8_STRING:
+                    {
+                        UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
+                        bytepos += 2;
+                        List<String> returnList = new List<String>(listLength);
+                        for (Int32 x = 0; x < listLength; x++)
+                        {
+                            bytepos += 1; //skip type marker
+                            Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytepos)];
+                            bytepos += 4;
+                            Array.Copy(_Data, bytepos, data, 0, data.Length);
+                            returnList.Add(Encoding.UTF8.GetString(data, 0, data.Length));
+                            bytepos += data.Length;
+                        }
+                        _PacketObjects.Add(returnList);
+                    }
                     break;
                 case ParamTypes.COMPRESSED_BYTE_PACKET:
                     break;
