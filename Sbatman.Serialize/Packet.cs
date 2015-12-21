@@ -857,7 +857,7 @@ namespace Sbatman.Serialize
 
         public static Byte[] Uncompress(Byte[] bytes)
         {
-            using (ICSharpCode.SharpZipLib.GZip.GZipInputStream ds = new ICSharpCode.SharpZipLib.GZip.GZipInputStream(new MemoryStream(bytes)))
+            using (LZ4PCL.LZ4Stream ds = new LZ4PCL.LZ4Stream(new MemoryStream(bytes), LZ4PCL.CompressionMode.Decompress))
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
@@ -871,7 +871,7 @@ namespace Sbatman.Serialize
         {
             using (MemoryStream ms = new MemoryStream())
             {
-                using (ICSharpCode.SharpZipLib.GZip.GZipOutputStream ds = new ICSharpCode.SharpZipLib.GZip.GZipOutputStream(ms))
+                using (LZ4PCL.LZ4Stream ds = new LZ4PCL.LZ4Stream(ms, LZ4PCL.CompressionMode.Compress))
                 {
                     ds.Write(bytes, 0, bytes.Length);
                 }
