@@ -37,6 +37,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Auto\Serializer.cs" />
+    <Compile Include="Auto\TypeContract.cs" />
     <Compile Include="NotAPacketException.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="PacketCorruptException.cs" />
