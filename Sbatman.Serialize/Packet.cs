@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Reflection;
+using Sbatman.Serialize.Auto;
 
 #endregion Usings
 
@@ -335,7 +337,7 @@ namespace Sbatman.Serialize
         {
             AddToListInternal(list, ParamTypes.INT32, 4);
         }
-        
+
 
         /// <summary>
         /// Adds a list of Int32s to the packet
@@ -371,6 +373,17 @@ namespace Sbatman.Serialize
         }
 
         /// <summary>
+        /// Adds a list of UInt64s to the packet
+        /// </summary>
+        /// <param name="list">The list of doubles to add</param>
+        /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
+        public void Add(IReadOnlyCollection<UInt64> list)
+        {
+            AddToListInternal(list, ParamTypes.UINT64, 8);
+        }
+
+        /// <summary>
         /// Adds a list of Decimals to the packet
         /// </summary>
         /// <param name="list">The list of decimals to add</param>
@@ -387,7 +400,7 @@ namespace Sbatman.Serialize
         /// <param name="list">The list of Strings to add</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         /// <exception cref="ArgumentOutOfRangeException">Will throw if list is Null, empty or has more than UInt16.MaxValue elements</exception>
-        public void AddList(IReadOnlyCollection<String> list)
+        public void Add(IReadOnlyCollection<String> list)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
             if (list == null || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null and > UInt16.MaxValue element lists cannot be added");
@@ -421,16 +434,17 @@ namespace Sbatman.Serialize
             else if (o is Packet) Add((Packet)o);
             else if (o is Byte[]) Add((Byte[])o);
 
-            else if (o is List<String>) AddList((List<String>)o);
-            else if (o is List<Single>) AddList((List<Single>)o);
-            //  else if (o is List<Int16>) AddList((List<Int16>)o);
-            else if (o is List<Int32>) AddList((List<Int32>)o);
-            else if (o is List<Int64>) AddList((List<Int64>)o);
+            else if (o is IReadOnlyCollection<String>) Add((IReadOnlyCollection<String>)o);
+            else if (o is IReadOnlyCollection<Single>) Add((IReadOnlyCollection<Single>)o);
+            //else if (o is IReadOnlyCollection<Int16>) Add((IReadOnlyCollection<Int16>)o);
+            else if (o is IReadOnlyCollection<Int32>) Add((IReadOnlyCollection<Int32>)o);
+            else if (o is IReadOnlyCollection<Int64>) Add((IReadOnlyCollection<Int64>)o);
+            else if (o is IReadOnlyCollection<UInt64>) Add((IReadOnlyCollection<UInt64>)o);
             //  else if (o is List<UInt16>) AddList((List<UInt16>)o);
             //  else if (o is List<UInt32>) AddList((List<UInt32>)o);
             //  else if (o is List<UInt64>) AddList((List<UInt64>)o);
-            else if (o is List<Double>) AddList((List<Double>)o);
-            else if (o is List<Decimal>) AddList((List<Decimal>)o);
+            else if (o is IReadOnlyCollection<Double>) Add((IReadOnlyCollection<Double>)o);
+            else if (o is IReadOnlyCollection<Decimal>) Add((IReadOnlyCollection<Decimal>)o);
             //  else if (o is List<DateTime>) AddList((List<DateTime>)o);
             //  else if (o is List<TimeSpan>) AddList((List<TimeSpan>)o);
             //  else if (o is List<Guid>) AddList((List<Guid>)o);
@@ -500,6 +514,7 @@ namespace Sbatman.Serialize
         public Object[] GetObjects()
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
+            if (_PacketObjects == null) UpdateObjects();
             return _PacketObjects.ToArray();
         }
 
@@ -525,7 +540,7 @@ namespace Sbatman.Serialize
 
         private Int32 UnpackList(Int32 bytepos)
         {
-            ParamTypes listType = (ParamTypes) (_Data[bytepos++] & ~128);
+            ParamTypes listType = (ParamTypes)(_Data[bytepos++] & ~128);
             UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
             bytepos += 2;
             switch (listType)
@@ -653,8 +668,6 @@ namespace Sbatman.Serialize
                     break;
                 case ParamTypes.UTF8_STRING:
                     {
-                        UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
-                        bytepos += 2;
                         List<String> returnList = new List<String>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
@@ -847,6 +860,7 @@ namespace Sbatman.Serialize
         /// <summary>
         ///     An enum containing supported types
         /// </summary>
+        [Flags]
         internal enum ParamTypes
         {
             FLOAT,
@@ -866,7 +880,8 @@ namespace Sbatman.Serialize
             TIMESPAN,
             DATETIME,
             GUID,
-            UNKNOWN=1000
+            UNKNOWN = 1000,
+            AUTOPACK_REFRENCE = 1001
         };
 
         internal static ParamTypes DetermineParamType(Type t)
@@ -886,7 +901,31 @@ namespace Sbatman.Serialize
             if (t == typeof(TimeSpan)) return ParamTypes.TIMESPAN;
             if (t == typeof(Guid)) return ParamTypes.GUID;
             if (t == typeof(Decimal)) return ParamTypes.DECIMAL;
+
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Boolean>))) return (ParamTypes)128 | ParamTypes.BOOL;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Int16>))) return (ParamTypes)128 | ParamTypes.INT16;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Int32>))) return (ParamTypes)128 | ParamTypes.INT32;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Int64>))) return (ParamTypes)128 | ParamTypes.INT64;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<UInt16>))) return (ParamTypes)128 | ParamTypes.UINT16;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<UInt32>))) return (ParamTypes)128 | ParamTypes.UINT32;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<UInt64>))) return (ParamTypes)128 | ParamTypes.UINT64;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Single>))) return (ParamTypes)128 | ParamTypes.FLOAT;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Double>))) return (ParamTypes)128 | ParamTypes.DOUBLE;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<String>))) return (ParamTypes)128 | ParamTypes.UTF8_STRING;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Byte[]>))) return (ParamTypes)128 | ParamTypes.BYTE_PACKET;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<DateTime>))) return (ParamTypes)128 | ParamTypes.DATETIME;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<TimeSpan>))) return (ParamTypes)128 | ParamTypes.TIMESPAN;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Guid>))) return (ParamTypes)128 | ParamTypes.GUID;
+            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Decimal>))) return (ParamTypes)128 | ParamTypes.DECIMAL;
+
+            if (t.GetTypeInfo().GetCustomAttribute(typeof(AutoPacketable)) != null) return ParamTypes.AUTOPACK_REFRENCE;
             return ParamTypes.UNKNOWN;
+        }
+
+        private static bool IsSameOrSubclass(Type potentialBase, Type potentialDescendant)
+        {
+            return potentialBase.GetTypeInfo().ImplementedInterfaces.Contains(potentialDescendant)
+                   || potentialDescendant == potentialBase;
         }
 
         /// <summary>
