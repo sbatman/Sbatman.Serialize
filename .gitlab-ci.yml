@@ -1,0 +1,29 @@
+stages:
+  - build
+  - nuget
+
+build:
+  stage: build
+  script:
+  - echo "Restoring NuGet Packages..."
+  - nuget restore "Sbatman.Serialize.sln" -source "https://www.nuget.org/api/v2/"
+  - echo "Release build..."
+  - '"C:/Program Files (x86)/MSBuild/14.0/Bin/msbuild.exe" /consoleloggerparameters:ErrorsOnly /maxcpucount /nologo /property:Configuration=Release /verbosity:quiet "Sbatman.Serialize.sln"'
+  - echo "Debug build..."
+  - '"C:/Program Files (x86)/MSBuild/14.0/Bin/msbuild.exe" /consoleloggerparameters:ErrorsOnly /maxcpucount /nologo /property:Configuration=Debug /verbosity:quiet "Sbatman.Serialize.sln"'
+  tags: 
+  except:
+  - tags
+  artifacts:
+    paths:
+    - Sbatman.Serialize/bin/Release
+    - Sbatman.Serialize/bin/Debug
+
+nuget:
+  stage: nuget
+  script:
+  - nuget pack "Sbatman.Serialize/Sbatman.Serialize.csproj"
+  - nuget push *
+  tags: 
+  except:
+  - tags
