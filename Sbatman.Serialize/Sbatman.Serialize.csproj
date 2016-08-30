@@ -38,6 +38,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Auto\AutoPacketableAttribute.cs" />
+    <Compile Include="Auto\Serializer.cs" />
+    <Compile Include="Auto\TypeContract.cs" />
     <Compile Include="NotAPacketException.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="PacketCorruptException.cs" />
