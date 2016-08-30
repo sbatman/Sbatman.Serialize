@@ -11,9 +11,6 @@ build:
   - '"C:/Program Files (x86)/MSBuild/14.0/Bin/msbuild.exe" /consoleloggerparameters:ErrorsOnly /maxcpucount /nologo /property:Configuration=Release /verbosity:quiet "Sbatman.Serialize.sln"'
   - echo "Debug build..."
   - '"C:/Program Files (x86)/MSBuild/14.0/Bin/msbuild.exe" /consoleloggerparameters:ErrorsOnly /maxcpucount /nologo /property:Configuration=Debug /verbosity:quiet "Sbatman.Serialize.sln"'
-  tags: 
-  except:
-  - tags
   artifacts:
     paths:
     - Sbatman.Serialize/bin/Release
@@ -24,6 +21,5 @@ nuget:
   script:
   - nuget pack "Sbatman.Serialize/Sbatman.Serialize.csproj"
   - nuget push *
-  tags: 
-  except:
+  only:
   - tags
