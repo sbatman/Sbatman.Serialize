@@ -90,6 +90,7 @@ namespace Sbatman.Serialize
                 case ParamTypes.TIMESPAN: BitConverter.GetBytes(((TimeSpan)obj).Ticks).CopyTo(data, datpos); break;
                 case ParamTypes.DATETIME: BitConverter.GetBytes(((DateTime)obj).Ticks).CopyTo(data, datpos); break;
                 case ParamTypes.GUID: ((Guid)obj).ToByteArray().CopyTo(data, datpos); break;
+                case ParamTypes.PACKET: ((Packet)obj).ToByteArray().CopyTo(data, datpos); break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(t), t, null);
             }
@@ -902,21 +903,21 @@ namespace Sbatman.Serialize
             if (t == typeof(Guid)) return ParamTypes.GUID;
             if (t == typeof(Decimal)) return ParamTypes.DECIMAL;
 
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Boolean>))) return (ParamTypes)128 | ParamTypes.BOOL;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Int16>))) return (ParamTypes)128 | ParamTypes.INT16;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Int32>))) return (ParamTypes)128 | ParamTypes.INT32;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Int64>))) return (ParamTypes)128 | ParamTypes.INT64;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<UInt16>))) return (ParamTypes)128 | ParamTypes.UINT16;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<UInt32>))) return (ParamTypes)128 | ParamTypes.UINT32;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<UInt64>))) return (ParamTypes)128 | ParamTypes.UINT64;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Single>))) return (ParamTypes)128 | ParamTypes.FLOAT;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Double>))) return (ParamTypes)128 | ParamTypes.DOUBLE;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<String>))) return (ParamTypes)128 | ParamTypes.UTF8_STRING;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Byte[]>))) return (ParamTypes)128 | ParamTypes.BYTE_PACKET;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<DateTime>))) return (ParamTypes)128 | ParamTypes.DATETIME;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<TimeSpan>))) return (ParamTypes)128 | ParamTypes.TIMESPAN;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Guid>))) return (ParamTypes)128 | ParamTypes.GUID;
-            if (IsSameOrSubclass(t,typeof(IReadOnlyCollection<Decimal>))) return (ParamTypes)128 | ParamTypes.DECIMAL;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Boolean>))) return (ParamTypes)128 | ParamTypes.BOOL;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Int16>))) return (ParamTypes)128 | ParamTypes.INT16;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Int32>))) return (ParamTypes)128 | ParamTypes.INT32;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Int64>))) return (ParamTypes)128 | ParamTypes.INT64;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<UInt16>))) return (ParamTypes)128 | ParamTypes.UINT16;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<UInt32>))) return (ParamTypes)128 | ParamTypes.UINT32;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<UInt64>))) return (ParamTypes)128 | ParamTypes.UINT64;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Single>))) return (ParamTypes)128 | ParamTypes.FLOAT;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Double>))) return (ParamTypes)128 | ParamTypes.DOUBLE;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<String>))) return (ParamTypes)128 | ParamTypes.UTF8_STRING;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Byte[]>))) return (ParamTypes)128 | ParamTypes.BYTE_PACKET;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<DateTime>))) return (ParamTypes)128 | ParamTypes.DATETIME;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<TimeSpan>))) return (ParamTypes)128 | ParamTypes.TIMESPAN;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Guid>))) return (ParamTypes)128 | ParamTypes.GUID;
+            if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Decimal>))) return (ParamTypes)128 | ParamTypes.DECIMAL;
 
             if (t.GetTypeInfo().GetCustomAttribute(typeof(AutoPacketable)) != null) return ParamTypes.AUTOPACK_REFRENCE;
             return ParamTypes.UNKNOWN;
