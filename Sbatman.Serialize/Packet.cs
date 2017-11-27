@@ -419,45 +419,89 @@ namespace Sbatman.Serialize
 
         public void AddObject(Object o)
         {
-            if (o is String) Add((String)o);
-            else if (o is Single) Add((Single)o);
-            else if (o is Int16) Add((Int16)o);
-            else if (o is Int32) Add((Int32)o);
-            else if (o is Int64) Add((Int64)o);
-            else if (o is UInt16) Add((UInt16)o);
-            else if (o is UInt32) Add((UInt32)o);
-            else if (o is UInt64) Add((UInt64)o);
-            else if (o is Double) Add((Double)o);
-            else if (o is Decimal) Add((Decimal)o);
-            else if (o is DateTime) Add((DateTime)o);
-            else if (o is TimeSpan) Add((TimeSpan)o);
-            else if (o is Guid) Add((Guid)o);
-            else if (o is Packet) Add((Packet)o);
-            else if (o is Byte[]) Add((Byte[])o);
-
-            else if (o is IReadOnlyCollection<String>) Add((IReadOnlyCollection<String>)o);
-            else if (o is IReadOnlyCollection<Single>) Add((IReadOnlyCollection<Single>)o);
-            //else if (o is IReadOnlyCollection<Int16>) Add((IReadOnlyCollection<Int16>)o);
-            else if (o is IReadOnlyCollection<Int32>) Add((IReadOnlyCollection<Int32>)o);
-            else if (o is IReadOnlyCollection<Int64>) Add((IReadOnlyCollection<Int64>)o);
-            else if (o is IReadOnlyCollection<UInt64>) Add((IReadOnlyCollection<UInt64>)o);
-            //  else if (o is List<UInt16>) AddList((List<UInt16>)o);
-            //  else if (o is List<UInt32>) AddList((List<UInt32>)o);
-            //  else if (o is List<UInt64>) AddList((List<UInt64>)o);
-            else if (o is IReadOnlyCollection<Double>) Add((IReadOnlyCollection<Double>)o);
-            else if (o is IReadOnlyCollection<Decimal>) Add((IReadOnlyCollection<Decimal>)o);
-            //  else if (o is List<DateTime>) AddList((List<DateTime>)o);
-            //  else if (o is List<TimeSpan>) AddList((List<TimeSpan>)o);
-            //  else if (o is List<Guid>) AddList((List<Guid>)o);
-            //   else if (o is List<Packet>) AddList((List<Packet>)o);
-            //  else if (o is List<Byte[]>) AddList((List<Byte[]>)o);
-            else { throw new ArgumentOutOfRangeException("o", "The object type is not currently supported"); }
+            switch (o)
+            {
+                case String _:
+                    Add((String)o);
+                    break;
+                case Single _:
+                    Add((Single)o);
+                    break;
+                case Int16 _:
+                    Add((Int16)o);
+                    break;
+                case Int32 _:
+                    Add((Int32)o);
+                    break;
+                case Int64 _:
+                    Add((Int64)o);
+                    break;
+                case UInt16 _:
+                    Add((UInt16)o);
+                    break;
+                case UInt32 _:
+                    Add((UInt32)o);
+                    break;
+                case UInt64 _:
+                    Add((UInt64)o);
+                    break;
+                case Double _:
+                    Add((Double)o);
+                    break;
+                case Decimal _:
+                    Add((Decimal)o);
+                    break;
+                case DateTime _:
+                    Add((DateTime)o);
+                    break;
+                case TimeSpan _:
+                    Add((TimeSpan)o);
+                    break;
+                case Guid _:
+                    Add((Guid)o);
+                    break;
+                case Packet _:
+                    Add((Packet)o);
+                    break;
+                case Byte[] _:
+                    Add((Byte[])o);
+                    break;
+                case Boolean _:
+                    Add((Boolean)o);
+                    break;
+                case IReadOnlyCollection<String> _:
+                    Add((IReadOnlyCollection<String>)o);
+                    break;
+                case IReadOnlyCollection<Single> _:
+                    Add((IReadOnlyCollection<Single>)o);
+                    break;
+                case IReadOnlyCollection<Boolean> _:
+                    Add((IReadOnlyCollection<Boolean>)o);
+                    break;
+                case IReadOnlyCollection<Int32> _:
+                    Add((IReadOnlyCollection<Int32>)o);
+                    break;
+                case IReadOnlyCollection<Int64> _:
+                    Add((IReadOnlyCollection<Int64>)o);
+                    break;
+                case IReadOnlyCollection<UInt64> _:
+                    Add((IReadOnlyCollection<UInt64>)o);
+                    break;
+                case IReadOnlyCollection<Double> _:
+                    Add((IReadOnlyCollection<Double>)o);
+                    break;
+                case IReadOnlyCollection<Decimal> _:
+                    Add((IReadOnlyCollection<Decimal>)o);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("o", "The object type is not currently supported");
+            }
         }
 
         private void AddToListInternal<T>(IReadOnlyCollection<T> list, ParamTypes typeMarker, UInt32 elementSize)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
-            if (list == null || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null and > UInt16.MaxValue element lists cannot be added");
+            if (list == null || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException(nameof(list), "Null and > UInt16.MaxValue element lists cannot be added");
             _ReturnByteArray = null;
             UInt32 byteLength = 3 + (elementSize * (UInt32)list.Count);
             while (_DataPos + byteLength >= _Data.Length) ExpandDataArray();
