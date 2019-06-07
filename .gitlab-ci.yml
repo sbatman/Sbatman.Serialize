@@ -1,25 +1,17 @@
+variables:
+  DOCKER_DRIVER: overlay2
+
 stages:
   - build
-  - nuget
 
 build:
+  image: microsoft/dotnet:latest
   stage: build
   script:
-  - echo "Restoring NuGet Packages..."
-  - '".nuget/nuget.exe" restore "Sbatman.Serialize.sln" -source "https://www.nuget.org/api/v2/"'
-  - echo "Release build..."
-  - '"C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/MSBuild/15.0/Bin/msbuild.exe" /consoleloggerparameters:ErrorsOnly /maxcpucount /nologo /property:Configuration=Release /verbosity:quiet "Sbatman.Serialize.sln"'
-  - echo "Debug build..."
-  - '"C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/MSBuild/15.0/Bin/msbuild.exe" /consoleloggerparameters:ErrorsOnly /maxcpucount /nologo /property:Configuration=Debug /verbosity:quiet "Sbatman.Serialize.sln"'
+  - cd Sbatman.Serialize
+  - "dotnet restore"
+  - "dotnet build"
   artifacts:
     paths:
     - Sbatman.Serialize/bin/Release
     - Sbatman.Serialize/bin/Debug
-
-nuget:
-  stage: nuget
-  script:
-  - '".nuget/nuget.exe" pack "Sbatman.Serialize/Sbatman.Serialize.csproj"'
-  - '".nuget/nuget.exe" push *'
-  only:
-  - tags
