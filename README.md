@@ -3,7 +3,7 @@ Sbatman.Serialize
 
 Description
 --------
-Sbatman.Serialize is a lightweight and easy to use serialization library. This allows rapid serilizsation and deserialzation of packets containing a range of .net types. The library is also Portable class library complient allowing it to work on a range of platforms.
+Sbatman.Serialize is a lightweight and easy to use serialization library. This allows rapid serilizsation and deserialzation of packets containing a range of .net types. This is A .net core Standard 2.0 library
 
 Nuget
 --------

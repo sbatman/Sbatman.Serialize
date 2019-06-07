@@ -3,6 +3,7 @@ variables:
 
 stages:
   - build
+  - publish
 
 build:
   image: microsoft/dotnet:latest
@@ -10,7 +11,19 @@ build:
   script:
   - cd Sbatman.Serialize
   - "dotnet restore"
-  - "dotnet build"
+  - "dotnet build -c release"
+  artifacts:
+    paths:
+    - Sbatman.Serialize/bin/Release
+    - Sbatman.Serialize/bin/Debug
+
+nuget:
+  image: microsoft/dotnet:latest
+  stage: publish
+  script:
+  - cd Sbatman.Serialize
+  - "dotnet pack"
+  - "dotnet nuget push * -k $NUGETKEY -s https://api.nuget.org/v3/index.json"
   artifacts:
     paths:
     - Sbatman.Serialize/bin/Release

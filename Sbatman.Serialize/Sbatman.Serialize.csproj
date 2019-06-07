@@ -1,7 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+  
   <PropertyGroup>
+  <PackageId>Sbatman.Serialize</PackageId>
+  <Version>1.0.0</Version>
+  <Authors>Steven Batchelor-Manning</Authors>
+  <Company>sbatman</Company>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Copyright>CC BY-SA 3.0</Copyright>
+    <Description>Sbatman.Serialize is a lightweight and easy to use serialization library. This allows rapid serilizsation and deserialzation of packets containing a range of .net types. This is A .net core Standard 2.0 library</Description>
   </PropertyGroup>
 
 </Project>
