@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -24,34 +25,34 @@ namespace Sbatman.Serialize.Auto
 
             while (objectsToSerialize.Count > 0)
             {
-                Tuple<Guid, Object> objectBeingSerialized = objectsToSerialize[objectsToSerialize.Count - 1];
+                (Guid item1, Object item2) = objectsToSerialize[objectsToSerialize.Count - 1];
                 objectsToSerialize.RemoveAt(objectsToSerialize.Count - 1);
-                if (objectBeingSerialized.Item2 == null) continue;
+                if (item2 == null) continue;
 
-                if (objectsSerialized.ContainsValue(objectBeingSerialized.Item2))
+                if (objectsSerialized.ContainsValue(item2))
                 {
                     // returnPacket.Add(objectsSerialized.FirstOrDefault(a => a.Value == objectBeingSerialized.Item2).Key);
                     continue;
                 }
 
-                objectsSerialized.Add(objectBeingSerialized.Item1, objectBeingSerialized.Item2);
+                objectsSerialized.Add(item1, item2);
 
-                TypeContract typeContract = GetTypeContract(objectBeingSerialized.Item2.GetType());
+                TypeContract typeContract = GetTypeContract(item2.GetType());
 
-                returnPacket.Add(objectBeingSerialized.Item1);
+                returnPacket.Add(item1);
                 returnPacket.Add(typeContract.UID);
                 foreach (Tuple<String, PropertyInfo, Packet.ParamTypes> propertyType in typeContract.PropertyTypes)
                 {
-                    if (propertyType.Item3 == Packet.ParamTypes.AUTOPACK_REFRENCE)
+                    if (propertyType.Item3 == Packet.ParamTypes.AUTOPACK_REFERENCE)
                     {
                         Guid guid = Guid.NewGuid();
-                        Object deserializationTarget = propertyType.Item2.GetValue(objectBeingSerialized.Item2);
+                        Object deserializationTarget = propertyType.Item2.GetValue(item2);
                         if (deserializationTarget != null) objectsToSerialize.Add(new Tuple<Guid, Object>(guid, deserializationTarget));
                         returnPacket.AddObject(guid);
                     }
                     else
                     {
-                        returnPacket.AddObject(propertyType.Item2.GetValue(objectBeingSerialized.Item2));
+                        returnPacket.AddObject(propertyType.Item2.GetValue(item2));
                     }
                 }
             }
@@ -83,37 +84,38 @@ namespace Sbatman.Serialize.Auto
         {
             Object[] dataObjects = p.GetObjects();
             List<Tuple<Guid, Object>> deserializedObjects = new List<Tuple<Guid, Object>>();
-            List<Tuple<Object, Guid, PropertyInfo>> pendingRefrences = new List<Tuple<Object, Guid, PropertyInfo>>();
+            List<Tuple<Object, Guid, PropertyInfo>> pendingReferences = new List<Tuple<Object, Guid, PropertyInfo>>();
 
-            int datapos = 0;
+            Int32 dataPos = 0;
 
-            while (datapos < dataObjects.Length)
+            while (dataPos < dataObjects.Length)
             {
-                Guid objectGuid = (Guid)dataObjects[datapos++];
-                string typeString = (string)dataObjects[datapos++];
+                Guid objectGuid = (Guid)dataObjects[dataPos++];
+                String typeString = (String)dataObjects[dataPos++];
                 TypeContract typeContract = _CachedTypeContracts.FirstOrDefault(a => a.UID == typeString);
+                Debug.Assert(typeContract != null, nameof(typeContract) + " != null");
                 Type objectType = typeContract.ClassType;
 
-                object builtObject = Activator.CreateInstance(objectType);
+                Object builtObject = Activator.CreateInstance(objectType);
 
-                foreach (Tuple<String, PropertyInfo, Packet.ParamTypes> propertyType in typeContract.PropertyTypes)
+                foreach ((String _, PropertyInfo item2, Packet.ParamTypes item3) in typeContract.PropertyTypes)
                 {
-                    if (propertyType.Item3 == Packet.ParamTypes.AUTOPACK_REFRENCE)
+                    if (item3 == Packet.ParamTypes.AUTOPACK_REFERENCE)
                     {
-                        pendingRefrences.Add(new Tuple<Object, Guid, PropertyInfo>(builtObject, (Guid)dataObjects[datapos++], propertyType.Item2));
+                        pendingReferences.Add(new Tuple<Object, Guid, PropertyInfo>(builtObject, (Guid)dataObjects[dataPos++], item2));
                     }
                     else
                     {
-                        propertyType.Item2.SetValue(builtObject, dataObjects[datapos++]);
+                        item2.SetValue(builtObject, dataObjects[dataPos++]);
                     }
                 }
                 deserializedObjects.Add(new Tuple<Guid, Object>(objectGuid, builtObject));
             }
 
-            foreach (Tuple<Object, Guid, PropertyInfo> refrence in pendingRefrences)
+            foreach (Tuple<Object, Guid, PropertyInfo> reference in pendingReferences)
             {
-                Tuple<Guid, Object> linkedClass = deserializedObjects.FirstOrDefault(a => a.Item1.Equals(refrence.Item2));
-                if (linkedClass != null) refrence.Item3.SetValue(refrence.Item1, linkedClass.Item2);
+                Tuple<Guid, Object> linkedClass = deserializedObjects.FirstOrDefault(a => a.Item1.Equals(reference.Item2));
+                if (linkedClass != null) reference.Item3.SetValue(reference.Item1, linkedClass.Item2);
             }
             return deserializedObjects[0].Item2;
         }

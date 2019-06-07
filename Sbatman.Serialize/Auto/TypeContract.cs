@@ -8,22 +8,13 @@ namespace Sbatman.Serialize.Auto
     public class TypeContract
     {
         private Type _ClassType;
-        internal Type ClassType
-        {
-            get { return _ClassType; }
-        }
+        internal Type ClassType => _ClassType;
 
         private String _UID;
-        public String UID
-        {
-            get { return _UID; }
-        }
+        public String UID => _UID;
 
         private List<Tuple<String, PropertyInfo, Packet.ParamTypes>> _PropertyTypes;
-        internal List<Tuple<String, PropertyInfo, Packet.ParamTypes>> PropertyTypes
-        {
-            get { return _PropertyTypes; }
-        }
+        internal List<Tuple<String, PropertyInfo, Packet.ParamTypes>> PropertyTypes => _PropertyTypes;
 
         public static TypeContract ConstructTypeContract(Type t)
         {

@@ -12,18 +12,19 @@ using Sbatman.Serialize.Auto;
 
 namespace Sbatman.Serialize
 {
+    /// <inheritdoc />
     /// <summary>
-    ///     The Packet class is a light class that is used for serialising and deserialising data.
+    ///     The Packet class is a light class that is used for serializing and deserializing data.
     /// </summary>
     public class Packet : IDisposable
     {
         /// <summary>
         ///     This is the initial size of the internal byte array size of the packet
         /// </summary>
-        private const Int32 INITAL_DATA_SIZE = 128;
+        private const Int32 INITIAL_DATA_SIZE = 128;
 
         /// <summary>
-        ///     This 4 byte sequence is used to improve start of packet regognition, it isnt the sole descriptor of the packet start
+        ///     This 4 byte sequence is used to improve start of packet recognition, it isn't the sole descriptor of the packet start
         ///     as this would possibly cause issues with packets with byte sequences within them that happened to contains this.
         /// </summary>
         public static readonly Byte[] PacketStart = { 0, 48, 21, 0 };
@@ -63,34 +64,33 @@ namespace Sbatman.Serialize
         /// </summary>
         protected Byte[] _ReturnByteArray;
 
-        private static void GetBytes(ParamTypes t, Object obj, Byte[] data, Int32 datpos)
+        private static void GetBytes(ParamTypes t, Object obj, Byte[] data, Int32 datPos)
         {
             t = (ParamTypes)((UInt32)t & ~128);
             switch (t)
             {
-                case ParamTypes.FLOAT: BitConverter.GetBytes((Single)obj).CopyTo(data, datpos); break;
-                case ParamTypes.DOUBLE: BitConverter.GetBytes((Double)obj).CopyTo(data, datpos); break;
-                case ParamTypes.INT16: BitConverter.GetBytes((Int16)obj).CopyTo(data, datpos); break;
-                case ParamTypes.UINT16: BitConverter.GetBytes((UInt16)obj).CopyTo(data, datpos); break;
-                case ParamTypes.INT32: BitConverter.GetBytes((Int32)obj).CopyTo(data, datpos); break;
-                case ParamTypes.UINT32: BitConverter.GetBytes((UInt32)obj).CopyTo(data, datpos); break;
-                case ParamTypes.INT64: BitConverter.GetBytes((Int64)obj).CopyTo(data, datpos); break;
-                case ParamTypes.UINT64: BitConverter.GetBytes((UInt64)obj).CopyTo(data, datpos); break;
-                case ParamTypes.BOOL: BitConverter.GetBytes((Boolean)obj).CopyTo(data, datpos); break;
-                case ParamTypes.BYTE_PACKET: ((Byte[])obj).CopyTo(data, datpos); break;
-                case ParamTypes.UTF8_STRING: Encoding.UTF8.GetBytes((String)obj).CopyTo(data, datpos); break;
-                case ParamTypes.COMPRESSED_BYTE_PACKET: ((Byte[])obj).CopyTo(data, datpos); break;
+                case ParamTypes.FLOAT: BitConverter.GetBytes((Single)obj).CopyTo(data, datPos); break;
+                case ParamTypes.DOUBLE: BitConverter.GetBytes((Double)obj).CopyTo(data, datPos); break;
+                case ParamTypes.INT16: BitConverter.GetBytes((Int16)obj).CopyTo(data, datPos); break;
+                case ParamTypes.UINT16: BitConverter.GetBytes((UInt16)obj).CopyTo(data, datPos); break;
+                case ParamTypes.INT32: BitConverter.GetBytes((Int32)obj).CopyTo(data, datPos); break;
+                case ParamTypes.UINT32: BitConverter.GetBytes((UInt32)obj).CopyTo(data, datPos); break;
+                case ParamTypes.INT64: BitConverter.GetBytes((Int64)obj).CopyTo(data, datPos); break;
+                case ParamTypes.UINT64: BitConverter.GetBytes((UInt64)obj).CopyTo(data, datPos); break;
+                case ParamTypes.BOOL: BitConverter.GetBytes((Boolean)obj).CopyTo(data, datPos); break;
+                case ParamTypes.BYTE_PACKET: ((Byte[])obj).CopyTo(data, datPos); break;
+                case ParamTypes.UTF8_STRING: Encoding.UTF8.GetBytes((String)obj).CopyTo(data, datPos); break;
                 case ParamTypes.DECIMAL:
                     {
                         Int32[] sections = Decimal.GetBits((Decimal)obj);
-                        for (Int32 i = 0; i < 4; i++) BitConverter.GetBytes(sections[i]).CopyTo(data, datpos + (i * 4));
+                        for (Int32 i = 0; i < 4; i++) BitConverter.GetBytes(sections[i]).CopyTo(data, datPos + (i * 4));
                     }
                     break;
 
-                case ParamTypes.TIMESPAN: BitConverter.GetBytes(((TimeSpan)obj).Ticks).CopyTo(data, datpos); break;
-                case ParamTypes.DATETIME: BitConverter.GetBytes(((DateTime)obj).Ticks).CopyTo(data, datpos); break;
-                case ParamTypes.GUID: ((Guid)obj).ToByteArray().CopyTo(data, datpos); break;
-                case ParamTypes.PACKET: ((Packet)obj).ToByteArray().CopyTo(data, datpos); break;
+                case ParamTypes.TIMESPAN: BitConverter.GetBytes(((TimeSpan)obj).Ticks).CopyTo(data, datPos); break;
+                case ParamTypes.DATETIME: BitConverter.GetBytes(((DateTime)obj).Ticks).CopyTo(data, datPos); break;
+                case ParamTypes.GUID: ((Guid)obj).ToByteArray().CopyTo(data, datPos); break;
+                case ParamTypes.PACKET: ((Packet)obj).ToByteArray().CopyTo(data, datPos); break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(t), t, null);
             }
@@ -101,7 +101,7 @@ namespace Sbatman.Serialize
         /// </summary>
         /// <param name="type">The packets type ID</param>
         /// <param name="internalDataArraySize">The initial size of the packets internal data array, defaults to INITAL_DATA_SIZE </param>
-        public Packet(UInt16 type, Int32 internalDataArraySize = INITAL_DATA_SIZE)
+        public Packet(UInt16 type, Int32 internalDataArraySize = INITIAL_DATA_SIZE)
         {
             Type = type;
             _Data = new Byte[internalDataArraySize];
@@ -147,12 +147,11 @@ namespace Sbatman.Serialize
         ///     Adds a byte array to the packet
         /// </summary>
         /// <param name="byteArray">The bytearray to add</param>
-        /// <param name="compress">Whether or not to compress the bytearray, potentially saving large quantitys of badwidth at increased cpu cost</param>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
-        public void Add(Byte[] byteArray, Boolean compress = false)
+        public void Add(Byte[] byteArray)
         {
-            if (compress) byteArray = Compress(byteArray);
-            AddInternal(byteArray, compress ? ParamTypes.COMPRESSED_BYTE_PACKET : ParamTypes.BYTE_PACKET, (UInt32)byteArray.Length, true);
+
+            AddInternal(byteArray, ParamTypes.BYTE_PACKET, (UInt32)byteArray.Length, true);
         }
 
         /// <summary>
@@ -404,11 +403,11 @@ namespace Sbatman.Serialize
         public void Add(IReadOnlyCollection<String> list)
         {
             if (_Disposed) throw new ObjectDisposedException(ToString());
-            if (list == null || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException("list", "Null and > UInt16.MaxValue element lists cannot be added");
+            if (list == null || list.Count > UInt16.MaxValue) throw new ArgumentOutOfRangeException(nameof(list), "Null and > UInt16.MaxValue element lists cannot be added");
             _ReturnByteArray = null;
-            UInt32 byteLength = 3;
-            while (_DataPos + byteLength >= _Data.Length) ExpandDataArray();
-            _Data[_DataPos++] = (Byte)(((Byte)ParamTypes.UTF8_STRING) | 128);
+            const UInt32 BYTE_LENGTH = 3;
+            while (_DataPos + BYTE_LENGTH >= _Data.Length) ExpandDataArray();
+            _Data[_DataPos++] = ((Byte)ParamTypes.UTF8_STRING) | 128;
             BitConverter.GetBytes((UInt16)list.Count).CopyTo(_Data, (Int32)_DataPos);
             _DataPos += 2;
 
@@ -421,80 +420,31 @@ namespace Sbatman.Serialize
         {
             switch (o)
             {
-                case String _:
-                    Add((String)o);
-                    break;
-                case Single _:
-                    Add((Single)o);
-                    break;
-                case Int16 _:
-                    Add((Int16)o);
-                    break;
-                case Int32 _:
-                    Add((Int32)o);
-                    break;
-                case Int64 _:
-                    Add((Int64)o);
-                    break;
-                case UInt16 _:
-                    Add((UInt16)o);
-                    break;
-                case UInt32 _:
-                    Add((UInt32)o);
-                    break;
-                case UInt64 _:
-                    Add((UInt64)o);
-                    break;
-                case Double _:
-                    Add((Double)o);
-                    break;
-                case Decimal _:
-                    Add((Decimal)o);
-                    break;
-                case DateTime _:
-                    Add((DateTime)o);
-                    break;
-                case TimeSpan _:
-                    Add((TimeSpan)o);
-                    break;
-                case Guid _:
-                    Add((Guid)o);
-                    break;
-                case Packet _:
-                    Add((Packet)o);
-                    break;
-                case Byte[] _:
-                    Add((Byte[])o);
-                    break;
-                case Boolean _:
-                    Add((Boolean)o);
-                    break;
-                case IReadOnlyCollection<String> _:
-                    Add((IReadOnlyCollection<String>)o);
-                    break;
-                case IReadOnlyCollection<Single> _:
-                    Add((IReadOnlyCollection<Single>)o);
-                    break;
-                case IReadOnlyCollection<Boolean> _:
-                    Add((IReadOnlyCollection<Boolean>)o);
-                    break;
-                case IReadOnlyCollection<Int32> _:
-                    Add((IReadOnlyCollection<Int32>)o);
-                    break;
-                case IReadOnlyCollection<Int64> _:
-                    Add((IReadOnlyCollection<Int64>)o);
-                    break;
-                case IReadOnlyCollection<UInt64> _:
-                    Add((IReadOnlyCollection<UInt64>)o);
-                    break;
-                case IReadOnlyCollection<Double> _:
-                    Add((IReadOnlyCollection<Double>)o);
-                    break;
-                case IReadOnlyCollection<Decimal> _:
-                    Add((IReadOnlyCollection<Decimal>)o);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException("o", "The object type is not currently supported");
+                case String s:Add(s);break;
+                case Single f:Add(f);break;
+                case Int16 s:Add(s);break;
+                case Int32 i:Add(i);break;
+                case Int64 l:Add(l);break;
+                case UInt16 d:Add(d);break;
+                case UInt32 u:Add(u);break;
+                case UInt64 d:Add(d);break;
+                case Double d:Add(d);break;
+                case Decimal d:Add(d);break;
+                case DateTime time:Add(time);break;
+                case TimeSpan span:Add(span);break;
+                case Guid guid:Add(guid);break;
+                case Packet packet:Add(packet);break;
+                case Byte[] bytes:Add(bytes);break;
+                case Boolean b:Add(b);break;
+                case IReadOnlyCollection<String> list:Add(list);break;
+                case IReadOnlyCollection<Single> list:Add(list);break;
+                case IReadOnlyCollection<Boolean> list:Add(list);break;
+                case IReadOnlyCollection<Int32> ints:Add(ints);break;
+                case IReadOnlyCollection<Int64> list:Add(list);break;
+                case IReadOnlyCollection<UInt64> list:Add(list);break;
+                case IReadOnlyCollection<Double> list:Add(list);break;
+                case IReadOnlyCollection<Decimal> list:Add(list);break;
+                default: throw new ArgumentOutOfRangeException(nameof(o), "The object type is not currently supported");
             }
         }
 
@@ -564,7 +514,7 @@ namespace Sbatman.Serialize
         }
 
         /// <summary>
-        ///     Ensures the packet bojects array correctly represents the objects that should be within this packet
+        ///     Ensures the packet objects array correctly represents the objects that should be within this packet
         /// </summary>
         /// <exception cref="ObjectDisposedException">Will throw if packet is disposed</exception>
         protected void UpdateObjects()
@@ -576,18 +526,18 @@ namespace Sbatman.Serialize
                 _PacketObjects = null;
             }
             _PacketObjects = new List<Object>(_ParamCount);
-            Int32 bytepos = 0;
+            Int32 bytePos = 0;
             for (Int32 x = 0; x < _ParamCount; x++)
             {
-                bytepos = (_Data[bytepos] & 128) > 0 ? UnpackList(bytepos) : UnpackValue(bytepos);
+                bytePos = (_Data[bytePos] & 128) > 0 ? UnpackList(bytePos) : UnpackValue(bytePos);
             }
         }
 
-        private Int32 UnpackList(Int32 bytepos)
+        private Int32 UnpackList(Int32 bytePos)
         {
-            ParamTypes listType = (ParamTypes)(_Data[bytepos++] & ~128);
-            UInt16 listLength = BitConverter.ToUInt16(_Data, bytepos);
-            bytepos += 2;
+            ParamTypes listType = (ParamTypes)(_Data[bytePos++] & ~128);
+            UInt16 listLength = BitConverter.ToUInt16(_Data, bytePos);
+            bytePos += 2;
             switch (listType)
             {
                 case ParamTypes.DOUBLE:
@@ -595,8 +545,8 @@ namespace Sbatman.Serialize
                         List<Double> returnList = new List<Double>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            returnList.Add(BitConverter.ToDouble(_Data, bytepos));
-                            bytepos += 8;
+                            returnList.Add(BitConverter.ToDouble(_Data, bytePos));
+                            bytePos += 8;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -607,8 +557,8 @@ namespace Sbatman.Serialize
                         List<Single> returnList = new List<Single>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            returnList.Add(BitConverter.ToSingle(_Data, bytepos));
-                            bytepos += 4;
+                            returnList.Add(BitConverter.ToSingle(_Data, bytePos));
+                            bytePos += 4;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -619,8 +569,8 @@ namespace Sbatman.Serialize
                         List<Int32> returnList = new List<Int32>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            returnList.Add(BitConverter.ToInt32(_Data, bytepos));
-                            bytepos += 4;
+                            returnList.Add(BitConverter.ToInt32(_Data, bytePos));
+                            bytePos += 4;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -631,8 +581,8 @@ namespace Sbatman.Serialize
                         List<Boolean> returnList = new List<Boolean>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            returnList.Add(BitConverter.ToBoolean(_Data, bytepos));
-                            bytepos += 1;
+                            returnList.Add(BitConverter.ToBoolean(_Data, bytePos));
+                            bytePos += 1;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -643,8 +593,8 @@ namespace Sbatman.Serialize
                         List<Int64> returnList = new List<Int64>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            returnList.Add(BitConverter.ToInt64(_Data, bytepos));
-                            bytepos += 8;
+                            returnList.Add(BitConverter.ToInt64(_Data, bytePos));
+                            bytePos += 8;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -654,8 +604,8 @@ namespace Sbatman.Serialize
                         List<UInt32> returnList = new List<UInt32>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            returnList.Add(BitConverter.ToUInt32(_Data, bytepos));
-                            bytepos += 4;
+                            returnList.Add(BitConverter.ToUInt32(_Data, bytePos));
+                            bytePos += 4;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -666,8 +616,8 @@ namespace Sbatman.Serialize
                         List<UInt64> returnList = new List<UInt64>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            returnList.Add(BitConverter.ToUInt64(_Data, bytepos));
-                            bytepos += 8;
+                            returnList.Add(BitConverter.ToUInt64(_Data, bytePos));
+                            bytePos += 8;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -678,8 +628,8 @@ namespace Sbatman.Serialize
                         List<Int16> returnList = new List<Int16>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            returnList.Add(BitConverter.ToInt16(_Data, bytepos));
-                            bytepos += 2;
+                            returnList.Add(BitConverter.ToInt16(_Data, bytePos));
+                            bytePos += 2;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -690,10 +640,10 @@ namespace Sbatman.Serialize
                         for (Int32 x = 0; x < listLength; x++)
                         {
                             Int32[] bits = new Int32[4];
-                            for (Int32 i = 0; i < 4; i++) bits[i] = BitConverter.ToInt32(_Data, bytepos + (i * 4));
+                            for (Int32 i = 0; i < 4; i++) bits[i] = BitConverter.ToInt32(_Data, bytePos + (i * 4));
                             returnList.Add(new Decimal(bits));
 
-                            bytepos += 16;
+                            bytePos += 16;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -703,8 +653,8 @@ namespace Sbatman.Serialize
                         List<UInt16> returnList = new List<UInt16>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            returnList.Add(BitConverter.ToUInt16(_Data, bytepos));
-                            bytepos += 2;
+                            returnList.Add(BitConverter.ToUInt16(_Data, bytePos));
+                            bytePos += 2;
                         }
                         _PacketObjects.Add(returnList);
                     }
@@ -716,17 +666,15 @@ namespace Sbatman.Serialize
                         List<String> returnList = new List<String>(listLength);
                         for (Int32 x = 0; x < listLength; x++)
                         {
-                            bytepos += 1; //skip type marker
-                            Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytepos)];
-                            bytepos += 4;
-                            Array.Copy(_Data, bytepos, data, 0, data.Length);
+                            bytePos += 1; //skip type marker
+                            Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytePos)];
+                            bytePos += 4;
+                            Array.Copy(_Data, bytePos, data, 0, data.Length);
                             returnList.Add(Encoding.UTF8.GetString(data, 0, data.Length));
-                            bytepos += data.Length;
+                            bytePos += data.Length;
                         }
                         _PacketObjects.Add(returnList);
                     }
-                    break;
-                case ParamTypes.COMPRESSED_BYTE_PACKET:
                     break;
                 case ParamTypes.PACKET:
                     break;
@@ -739,149 +687,141 @@ namespace Sbatman.Serialize
                 default:
                     throw new PacketCorruptException("An internal unpacking error occured, Unknown internal data type present");
             }
-            return bytepos;
+            return bytePos;
         }
 
-        private Int32 UnpackValue(Int32 bytepos)
+        private Int32 UnpackValue(Int32 bytePos)
         {
-            switch ((ParamTypes)_Data[bytepos++])
+            switch ((ParamTypes)_Data[bytePos++])
             {
                 case ParamTypes.DOUBLE:
                     {
-                        _PacketObjects.Add(BitConverter.ToDouble(_Data, bytepos));
-                        bytepos += sizeof(Double);
+                        _PacketObjects.Add(BitConverter.ToDouble(_Data, bytePos));
+                        bytePos += sizeof(Double);
                     }
                     break;
 
                 case ParamTypes.FLOAT:
                     {
-                        _PacketObjects.Add(BitConverter.ToSingle(_Data, bytepos));
-                        bytepos += sizeof(Single);
+                        _PacketObjects.Add(BitConverter.ToSingle(_Data, bytePos));
+                        bytePos += sizeof(Single);
                     }
                     break;
 
                 case ParamTypes.INT32:
                     {
-                        _PacketObjects.Add(BitConverter.ToInt32(_Data, bytepos));
-                        bytepos += sizeof(Int32);
+                        _PacketObjects.Add(BitConverter.ToInt32(_Data, bytePos));
+                        bytePos += sizeof(Int32);
                     }
                     break;
 
                 case ParamTypes.BOOL:
                     {
-                        _PacketObjects.Add(BitConverter.ToBoolean(_Data, bytepos));
-                        bytepos += sizeof(Boolean);
+                        _PacketObjects.Add(BitConverter.ToBoolean(_Data, bytePos));
+                        bytePos += sizeof(Boolean);
                     }
                     break;
 
                 case ParamTypes.INT64:
                     {
-                        _PacketObjects.Add(BitConverter.ToInt64(_Data, bytepos));
-                        bytepos += sizeof(Int64);
+                        _PacketObjects.Add(BitConverter.ToInt64(_Data, bytePos));
+                        bytePos += sizeof(Int64);
                     }
                     break;
 
                 case ParamTypes.BYTE_PACKET:
                     {
-                        Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytepos)];
-                        bytepos += 4;
-                        Array.Copy(_Data, bytepos, data, 0, data.Length);
+                        Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytePos)];
+                        bytePos += 4;
+                        Array.Copy(_Data, bytePos, data, 0, data.Length);
                         _PacketObjects.Add(data);
-                        bytepos += data.Length;
+                        bytePos += data.Length;
                     }
                     break;
 
                 case ParamTypes.PACKET:
                     {
-                        Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytepos)];
-                        bytepos += 4;
-                        Array.Copy(_Data, bytepos, data, 0, data.Length);
+                        Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytePos)];
+                        bytePos += 4;
+                        Array.Copy(_Data, bytePos, data, 0, data.Length);
                         _PacketObjects.Add(FromByteArray(data));
-                        bytepos += data.Length;
+                        bytePos += data.Length;
                     }
                     break;
 
                 case ParamTypes.UINT32:
                     {
-                        _PacketObjects.Add(BitConverter.ToUInt32(_Data, bytepos));
-                        bytepos += sizeof(UInt32);
+                        _PacketObjects.Add(BitConverter.ToUInt32(_Data, bytePos));
+                        bytePos += sizeof(UInt32);
                     }
                     break;
 
                 case ParamTypes.UINT64:
                     {
-                        _PacketObjects.Add(BitConverter.ToUInt64(_Data, bytepos));
-                        bytepos += sizeof(UInt64);
+                        _PacketObjects.Add(BitConverter.ToUInt64(_Data, bytePos));
+                        bytePos += sizeof(UInt64);
                     }
                     break;
 
                 case ParamTypes.INT16:
                     {
-                        _PacketObjects.Add(BitConverter.ToInt16(_Data, bytepos));
-                        bytepos += sizeof(Int16);
+                        _PacketObjects.Add(BitConverter.ToInt16(_Data, bytePos));
+                        bytePos += sizeof(Int16);
                     }
                     break;
 
                 case ParamTypes.UTF8_STRING:
                     {
-                        Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytepos)];
-                        bytepos += 4;
-                        Array.Copy(_Data, bytepos, data, 0, data.Length);
+                        Byte[] data = new Byte[BitConverter.ToInt32(_Data, bytePos)];
+                        bytePos += 4;
+                        Array.Copy(_Data, bytePos, data, 0, data.Length);
                         _PacketObjects.Add(Encoding.UTF8.GetString(data, 0, data.Length));
-                        bytepos += data.Length;
+                        bytePos += data.Length;
                     }
                     break;
 
                 case ParamTypes.DECIMAL:
                     {
                         Int32[] bits = new Int32[4];
-                        for (Int32 i = 0; i < 4; i++) bits[i] = BitConverter.ToInt32(_Data, bytepos + (i * 4));
+                        for (Int32 i = 0; i < 4; i++) bits[i] = BitConverter.ToInt32(_Data, bytePos + (i * 4));
                         _PacketObjects.Add(new Decimal(bits));
-                        bytepos += sizeof(Decimal);
+                        bytePos += sizeof(Decimal);
                     }
-                    break;
-
-                case ParamTypes.COMPRESSED_BYTE_PACKET:
-                    Byte[] data2 = new Byte[BitConverter.ToInt32(_Data, bytepos)];
-                    bytepos += 4;
-                    Array.Copy(_Data, bytepos, data2, 0, data2.Length);
-                    _PacketObjects.Add(Uncompress(data2));
-                    bytepos += data2.Length;
                     break;
 
                 case ParamTypes.TIMESPAN:
                     {
-                        _PacketObjects.Add(new TimeSpan(BitConverter.ToInt64(_Data, bytepos)));
-                        bytepos += 8;
+                        _PacketObjects.Add(new TimeSpan(BitConverter.ToInt64(_Data, bytePos)));
+                        bytePos += 8;
                     }
                     break;
 
                 case ParamTypes.DATETIME:
                     {
-                        _PacketObjects.Add(new DateTime(BitConverter.ToInt64(_Data, bytepos)));
-                        bytepos += 8;
+                        _PacketObjects.Add(new DateTime(BitConverter.ToInt64(_Data, bytePos)));
+                        bytePos += 8;
                     }
                     break;
 
                 case ParamTypes.GUID:
                     {
                         Byte[] guidArray = new Byte[16];
-                        Array.Copy(_Data, bytepos, guidArray, 0, 16);
+                        Array.Copy(_Data, bytePos, guidArray, 0, 16);
                         _PacketObjects.Add(new Guid(guidArray));
-                        bytepos += 16;
+                        bytePos += 16;
                     }
                     break;
 
                 case ParamTypes.UINT16:
                     {
-                        _PacketObjects.Add(BitConverter.ToUInt16(_Data, bytepos));
-                        bytepos += sizeof(UInt16);
+                        _PacketObjects.Add(BitConverter.ToUInt16(_Data, bytePos));
+                        bytePos += sizeof(UInt16);
                     }
                     break;
                 default:
                     throw new PacketCorruptException("An internal unpacking error occured, Unknown internal data type present");
             }
-            return bytepos;
+            return bytePos;
         }
 
         /// <summary>
@@ -919,14 +859,13 @@ namespace Sbatman.Serialize
             BOOL,
             BYTE_PACKET,
             UTF8_STRING,
-            COMPRESSED_BYTE_PACKET,
             DECIMAL,
             PACKET,
             TIMESPAN,
             DATETIME,
             GUID,
             UNKNOWN = 1000,
-            AUTOPACK_REFRENCE = 1001
+            AUTOPACK_REFERENCE = 1001
         };
 
         internal static ParamTypes DetermineParamType(Type t)
@@ -963,11 +902,11 @@ namespace Sbatman.Serialize
             if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Guid>))) return (ParamTypes)128 | ParamTypes.GUID;
             if (IsSameOrSubclass(t, typeof(IReadOnlyCollection<Decimal>))) return (ParamTypes)128 | ParamTypes.DECIMAL;
 
-            if (t.GetTypeInfo().GetCustomAttribute(typeof(AutoPacketable)) != null) return ParamTypes.AUTOPACK_REFRENCE;
+            if (t.GetTypeInfo().GetCustomAttribute(typeof(AutoPacketable)) != null) return ParamTypes.AUTOPACK_REFERENCE;
             return ParamTypes.UNKNOWN;
         }
 
-        private static bool IsSameOrSubclass(Type potentialBase, Type potentialDescendant)
+        private static Boolean IsSameOrSubclass(Type potentialBase, Type potentialDescendant)
         {
             return potentialBase.GetTypeInfo().ImplementedInterfaces.Contains(potentialDescendant)
                    || potentialDescendant == potentialBase;
@@ -976,7 +915,7 @@ namespace Sbatman.Serialize
         /// <summary>
         ///     Converts a byte array to a packet
         /// </summary>
-        /// <param name="data">the byte array to convery</param>
+        /// <param name="data">the byte array to convert</param>
         /// <returns>Returns a packet build from a byte array</returns>
         public static Packet FromByteArray(Byte[] data)
         {
@@ -1010,30 +949,6 @@ namespace Sbatman.Serialize
             Array.Copy(packetHeader, packetData, PACKET_HEADER_LENGTH);
 
             return FromByteArray(packetData);
-        }
-
-        public static Byte[] Uncompress(Byte[] bytes)
-        {
-            using (LZ4PCL.LZ4Stream ds = new LZ4PCL.LZ4Stream(new MemoryStream(bytes), LZ4PCL.CompressionMode.Decompress))
-            {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    ds.CopyTo(ms);
-                    return ms.ToArray();
-                }
-            }
-        }
-
-        public static Byte[] Compress(Byte[] bytes)
-        {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                using (LZ4PCL.LZ4Stream ds = new LZ4PCL.LZ4Stream(ms, LZ4PCL.CompressionMode.Compress))
-                {
-                    ds.Write(bytes, 0, bytes.Length);
-                }
-                return ms.ToArray();
-            }
         }
 
         /// <summary>
