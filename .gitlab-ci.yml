@@ -10,7 +10,6 @@ build:
   stage: build
   script:
   - cd Sbatman.Serialize
-  - "dotnet restore"
   - "dotnet build -c release"
   artifacts:
     paths:
@@ -22,8 +21,9 @@ nuget:
   stage: publish
   script:
   - cd Sbatman.Serialize
-  - "dotnet pack"
-  - "dotnet nuget push * -k $NUGETKEY -s https://api.nuget.org/v3/index.json"
+  - "dotnet pack -c release"
+  - cd bin/release/
+  - "dotnet nuget push *.nupkg -k $NUGETKEY -s https://api.nuget.org/v3/index.json"
   artifacts:
     paths:
     - Sbatman.Serialize/bin/Release
