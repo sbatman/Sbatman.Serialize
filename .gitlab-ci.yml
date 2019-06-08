@@ -28,3 +28,5 @@ nuget:
     paths:
     - Sbatman.Serialize/bin/Release
     - Sbatman.Serialize/bin/Debug
+  only:
+  - master
